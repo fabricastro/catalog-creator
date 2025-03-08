@@ -20,6 +20,8 @@ model Business {
   description String?   // Nueva descripción opcional
   logoUrl     String?   // URL del logo opcional
   user        User      @relation(fields: [userId], references: [id])
+  contact     String? 
+  hours       String?
   userId      String    @unique
   products    Product[] // Relación con productos
 }

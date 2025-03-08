@@ -11,18 +11,29 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(true);
     const [editingProduct, setEditingProduct] = useState<any | null>(null);
     const [newProduct, setNewProduct] = useState({ name: "", description: "", price: "", imageUrl: "" });
+    const [user, setUser] = useState<{ id: string; email: string } | null>(null);
     const router = useRouter();
+
+    useEffect(() => {
+        const checkAuth = async () => {
+            const res = await fetch("/api/auth/check");
+            if (!res.ok) {
+                router.push("/login");
+                return;
+            }
+            const userData = await res.json();
+            setUser(userData);
+        };
+        checkAuth();
+    }, [router]);
 
     useEffect(() => {
         const fetchBusiness = async () => {
             try {
                 const res = await fetch(`/api/business/${businessName}`);
+                if (!res.ok) throw new Error("Error al obtener el negocio");
                 const data = await res.json();
-                if (res.ok) {
-                    setBusiness(data);
-                } else {
-                    router.push("/404");
-                }
+                setBusiness(data);
             } catch (error) {
                 console.error("Error fetching business data:", error);
                 router.push("/404");
@@ -93,9 +104,19 @@ export default function Dashboard() {
 
     return (
         <div className="p-6">
-            <h1 className="text-2xl font-bold mt-4">{business.name}</h1>
-
-            <h2 className="text-xl font-bold mt-6">Productos</h2>
+            <h1 className="text-2xl font-bold mt-4">Dashboard de {business.name}</h1>
+            <p>Bienvenido, {user?.email}</p>
+            <button
+                onClick={() => router.push(`/${params.businessName}/dashboard/settings`)}
+                className="mt-4 bg-blue-500 text-white p-2 rounded"
+            >
+                Configuración del negocio
+            </button>
+            <button onClick={async () => {
+                await fetch("/api/auth/logout", { method: "POST" });
+                router.push("/login");
+            }} className="bg-red-500 text-white p-2 rounded mt-4">Cerrar sesión</button>
+            <h2 className="text-xl font-bold mt-6">Gestión de Productos</h2>
             <h2 className="text-xl font-bold mt-6">Agregar Producto</h2>
             <form onSubmit={handleAddProduct} className="mt-4 space-y-2">
                 <input type="text" placeholder="Nombre" value={newProduct.name} onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })} className="w-full p-2 border rounded" required />
