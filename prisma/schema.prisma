@@ -17,13 +17,14 @@ model User {
 model Business {
   id          String    @id @default(uuid())
   name        String    @unique
-  description String?   // Nueva descripción opcional
-  logoUrl     String?   // URL del logo opcional
+  slug        String  @unique
+  description String?  
+  logoUrl     String?   
   user        User      @relation(fields: [userId], references: [id])
   contact     String? 
   hours       String?
   userId      String    @unique
-  products    Product[] // Relación con productos
+  products    Product[] 
 }
 
 model Product {
