@@ -3,6 +3,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Category {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  products    Product[]
+}
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -35,5 +42,7 @@ model Product {
   imageUrl    String?
   business    Business @relation(fields: [businessId], references: [id])
   businessId  String
+  categoryId  String?
+  category    Category? @relation(fields: [categoryId], references: [id])
 }
 

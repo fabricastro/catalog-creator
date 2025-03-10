@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
@@ -16,6 +16,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Edit } from "lucide-react";
 
+interface Category {
+    id: string;
+    name: string;
+}
+
 interface EditProductDialogProps {
     product: any;
     businessName: string;
@@ -23,16 +28,41 @@ interface EditProductDialogProps {
 }
 
 export default function EditProductDialog({ product, businessName, setBusiness }: EditProductDialogProps) {
-    const [editingProduct, setEditingProduct] = useState(product);
+    const [editingProduct, setEditingProduct] = useState({ ...product, categoryId: product.categoryId || "" });
+    const [categories, setCategories] = useState<Category[]>([]);
     const [isOpen, setIsOpen] = useState(false);
+
+    // Cargar categorías cuando se abre el modal
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const res = await fetch(`/api/business/${businessName}/categories`);
+                if (!res.ok) throw new Error("Error al obtener categorías");
+                const data = await res.json();
+                setCategories(data);
+            } catch (error) {
+                console.error("❌ Error al obtener categorías:", error);
+            }
+        };
+
+        if (isOpen) {
+            fetchCategories();
+        }
+    }, [isOpen]);
 
     const handleEditProduct = async (e: React.FormEvent) => {
         e.preventDefault();
+        const updatedProduct = {
+            ...editingProduct,
+            price: parseFloat(editingProduct.price), // ✅ Convertir a número
+        };
+
         const res = await fetch(`/api/business/${businessName}/update-product/${editingProduct.id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(editingProduct),
+            body: JSON.stringify(updatedProduct),
         });
+
         const data = await res.json();
         if (res.ok) {
             setBusiness((prev: any) =>
@@ -65,6 +95,23 @@ export default function EditProductDialog({ product, businessName, setBusiness }
                         <div className="grid gap-2">
                             <Label htmlFor="edit-description">Descripción</Label>
                             <Textarea id="edit-description" value={editingProduct.description} onChange={(e) => setEditingProduct({ ...editingProduct, description: e.target.value })} rows={3} />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="edit-category">Categoría</Label>
+                            <select
+                                id="edit-category"
+                                value={editingProduct.categoryId}
+                                onChange={(e) => setEditingProduct({ ...editingProduct, categoryId: e.target.value })}
+                                className="border rounded p-2"
+                                required
+                            >
+                                <option value="" disabled>Selecciona una categoría</option>
+                                {categories.map((category) => (
+                                    <option key={category.id} value={category.id}>
+                                        {category.name}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="edit-price">Precio</Label>

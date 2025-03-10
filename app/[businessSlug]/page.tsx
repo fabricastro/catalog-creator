@@ -21,7 +21,7 @@ interface Product {
     description: string
     price: number
     imageUrl?: string
-    category?: string
+    categoryId?: string
 }
 
 interface Business {
@@ -51,30 +51,50 @@ export default function BusinessPage() {
     const [isCartOpen, setIsCartOpen] = useState(false)
     const [isMenuOpen, setIsMenuOpen] = useState(false)
 
-    useEffect(() => {
-        const fetchBusiness = async () => {
-            try {
-                const res = await fetch(`/api/business/${businessSlug}`)
-                if (!res.ok) throw new Error("Error al obtener el negocio")
-                const data = await res.json()
+    const [categories, setCategories] = useState<string[]>(["Todos"]);
+    const [categoryMap, setCategoryMap] = useState<{ [key: string]: string }>({});
 
-                const productsWithCategories = data.products.map((product: Product) => ({
+    useEffect(() => {
+        const fetchBusinessAndCategories = async () => {
+            try {
+                // Obtener datos del negocio
+                const businessRes = await fetch(`/api/business/${businessSlug}`);
+                if (!businessRes.ok) throw new Error("Error al obtener el negocio");
+                const businessData = await businessRes.json();
+
+                // Obtener categorías
+                const categoriesRes = await fetch(`/api/business/${businessSlug}/categories`);
+                if (!categoriesRes.ok) throw new Error("Error al obtener las categorías");
+                const categoriesData = await categoriesRes.json();
+
+                // Crear un mapa de categorías (id -> nombre)
+                const categoryMapping: { [key: string]: string } = {};
+                categoriesData.forEach((cat: { id: string; name: string }) => {
+                    categoryMapping[cat.id] = cat.name;
+                });
+
+                setCategories(["Todos", ...categoriesData.map((cat) => cat.name)]);
+                setCategoryMap(categoryMapping);
+
+                // Asignar el nombre de la categoría a cada producto
+                const productsWithCategories = businessData.products.map((product: Product) => ({
                     ...product,
-                    category: CATEGORIES[Math.floor(Math.random() * (CATEGORIES.length - 1)) + 1],
-                }))
+                    categoryName: categoryMapping[product.categoryId] || "Sin categoría",
+                }));
 
                 setBusiness({
-                    ...data,
+                    ...businessData,
                     products: productsWithCategories,
-                })
+                });
             } catch (error) {
-                console.error("Error fetching business data:", error)
+                console.error("Error fetching business and categories:", error);
             } finally {
-                setLoading(false)
+                setLoading(false);
             }
-        }
-        fetchBusiness()
-    }, [businessSlug])
+        };
+
+        fetchBusinessAndCategories();
+    }, [businessSlug]);
 
     const addToCart = (product: Product) => {
         setCart((prevCart) => {
@@ -130,12 +150,12 @@ export default function BusinessPage() {
     }
 
     const filteredProducts =
-        business?.products.filter(
-            (product) =>
-                (activeCategory === "Todos" || product.category === activeCategory) &&
-                (product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    (product.description && product.description.toLowerCase().includes(searchQuery.toLowerCase()))),
-        ) || []
+        business?.products.filter((product) =>
+            (activeCategory === "Todos" || categories.find((cat) => cat === activeCategory && cat === product.categoryId)) &&
+            (product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (product.description && product.description.toLowerCase().includes(searchQuery.toLowerCase())))
+        ) || [];
+
 
     if (loading) {
         return (
@@ -239,7 +259,7 @@ export default function BusinessPage() {
                                     {cart.length > 0 ? (
                                         <div className="space-y-4">
                                             {cart.map((item) => (
-                                                <div key={item.id} className="flex items-center gap-4">
+                                                <div key={item.id} className="flex items-center gap-4 px-4">
                                                     <div className="w-16 h-16 relative rounded-md overflow-hidden bg-muted flex-shrink-0">
                                                         {item.imageUrl ? (
                                                             <Image
@@ -290,7 +310,7 @@ export default function BusinessPage() {
                                             ))}
                                         </div>
                                     ) : (
-                                        <div className="text-center py-12">
+                                        <div className="text-center px-10 py-12">
                                             <ShoppingCart className="h-12 w-12 mx-auto text-muted-foreground" />
                                             <h3 className="mt-4 text-lg font-medium">Tu carrito está vacío</h3>
                                             <p className="mt-2 text-muted-foreground">Agrega algunos productos para comenzar tu pedido.</p>
@@ -302,7 +322,7 @@ export default function BusinessPage() {
                                 </ScrollArea>
 
                                 {cart.length > 0 && (
-                                    <div className="mt-auto pt-6 border-t">
+                                    <div className="mt-auto px-4 py-6 border-t">
                                         <div className="flex justify-between mb-4">
                                             <span className="font-medium">Total</span>
                                             <span className="font-bold">${getCartTotal()}</span>
@@ -321,7 +341,7 @@ export default function BusinessPage() {
             </header>
 
             {/* Main content */}
-            <main className="flex-1 container px-4 py-8">
+            <main className="flex-1 px-4 md:px-12 py-8">
                 <div className="mb-6">
                     <div className="relative">
                         <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -349,7 +369,7 @@ export default function BusinessPage() {
                         <div className="hidden md:block mt-4 overflow-x-auto pb-2">
                             <Tabs defaultValue="Todos" value={activeCategory} onValueChange={setActiveCategory} className="w-full">
                                 <TabsList className="w-full justify-start">
-                                    {CATEGORIES.map((category) => (
+                                    {categories.map((category) => (
                                         <TabsTrigger key={category} value={category}>
                                             {category}
                                         </TabsTrigger>
@@ -382,24 +402,22 @@ export default function BusinessPage() {
                 </div>
 
                 {filteredProducts.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
                         {filteredProducts.map((product) => (
                             <Card key={product.id} className="overflow-hidden">
                                 <div className="aspect-video relative bg-muted">
                                     {product.imageUrl ? (
-                                        <Image
-                                            src={product.imageUrl || "/placeholder.svg"}
-                                            alt={product.name}
-                                            fill
-                                            className="object-cover"
-                                            unoptimized
-                                        />
+                                        <Image src={product.imageUrl} alt={product.name} fill className="object-cover" unoptimized />
                                     ) : (
                                         <div className="flex items-center justify-center h-full text-muted-foreground">
                                             <MenuIcon className="h-10 w-10" />
                                         </div>
                                     )}
-                                    {product.category && <Badge className="absolute top-2 right-2">{product.category}</Badge>}
+                                    {product.categoryName && (
+                                        <Badge className="absolute top-2 right-2 bg-primary text-white">
+                                            {product.categoryName}
+                                        </Badge>
+                                    )}
                                 </div>
                                 <CardHeader className="p-4">
                                     <CardTitle className="line-clamp-1">{product.name}</CardTitle>
@@ -411,18 +429,13 @@ export default function BusinessPage() {
                                     <p className="text-lg font-bold mt-2">${product.price}</p>
                                 </CardContent>
                                 <CardFooter className="p-4 pt-0">
-                                    <Button
-                                        className="w-full"
-                                        onClick={() => {
-                                            addToCart(product)
-                                            // Optional: Show a toast or feedback
-                                        }}
-                                    >
+                                    <Button className="w-full" onClick={() => addToCart(product)}>
                                         <Plus className="mr-2 h-4 w-4" />
                                         Agregar al carrito
                                     </Button>
                                 </CardFooter>
                             </Card>
+
                         ))}
                     </div>
                 ) : (
@@ -467,11 +480,11 @@ export default function BusinessPage() {
 
             {/* Floating cart button (mobile) */}
             {cart.length > 0 && (
-                <div className="fixed bottom-4 right-4 md:hidden z-50">
+                <div className="fixed bottom-4 right-4  z-50">
                     <Button size="lg" className="rounded-full h-14 w-14 shadow-lg" onClick={() => setIsCartOpen(true)}>
                         <div className="relative">
                             <ShoppingCart className="h-6 w-6" />
-                            <Badge variant="destructive" className="absolute -top-2 -right-2">
+                            <Badge variant="destructive" className="absolute -top-7 -right-6">
                                 {getCartItemCount()}
                             </Badge>
                         </div>

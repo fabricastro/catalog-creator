@@ -1,4 +1,3 @@
-// app/dashboard/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -11,6 +10,7 @@ import { Package, Search, Plus, Edit, Trash2 } from "lucide-react";
 import Image from "next/image";
 import AddProductDialog from "@/components/ui/dashboard/AddProductDialog";
 import EditProductDialog from "@/components/ui/dashboard/EditProductDialog";
+import AddCategoryDialog from "@/components/ui/dashboard/AddCategoryDialog"; // Agregado
 
 interface Product {
     id: string;
@@ -34,6 +34,7 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [error, setError] = useState<string | null>(null);
+    const [categories, setCategories] = useState<string[]>([]); // Agregado
     const router = useRouter();
 
     useEffect(() => {
@@ -67,7 +68,19 @@ export default function Dashboard() {
             }
         };
 
+        const fetchCategories = async () => {
+            try {
+                const res = await fetch(`/api/business/${encodeURIComponent(businessSlug)}/categories`);
+                if (!res.ok) throw new Error("Error al obtener categorías");
+                const data = await res.json();
+                setCategories(data.map((category: { name: string }) => category.name));
+            } catch (error) {
+                console.error("❌ Error al obtener categorías:", error);
+            }
+        };
+
         fetchBusiness();
+        fetchCategories();
     }, [businessSlug]);
 
     const handleDeleteProduct = async (productId: string) => {
@@ -119,7 +132,10 @@ export default function Dashboard() {
                     <h1 className="text-3xl font-bold">{business.name}</h1>
                     <p className="text-muted-foreground">Administra tus productos y catálogos</p>
                 </div>
-                <AddProductDialog businessName={businessSlug} setBusiness={setBusiness} />
+                <div className="flex gap-2">
+                    <AddProductDialog businessName={businessSlug} setBusiness={setBusiness} />
+                    <AddCategoryDialog setCategories={setCategories} />
+                </div>
             </div>
 
             <Tabs defaultValue="products">

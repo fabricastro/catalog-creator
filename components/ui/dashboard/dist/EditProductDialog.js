@@ -58,18 +58,50 @@ var lucide_react_1 = require("lucide-react");
 function EditProductDialog(_a) {
     var _this = this;
     var product = _a.product, businessName = _a.businessName, setBusiness = _a.setBusiness;
-    var _b = react_1.useState(product), editingProduct = _b[0], setEditingProduct = _b[1];
-    var _c = react_1.useState(false), isOpen = _c[0], setIsOpen = _c[1];
+    var _b = react_1.useState(__assign(__assign({}, product), { categoryId: product.categoryId || "" })), editingProduct = _b[0], setEditingProduct = _b[1];
+    var _c = react_1.useState([]), categories = _c[0], setCategories = _c[1];
+    var _d = react_1.useState(false), isOpen = _d[0], setIsOpen = _d[1];
+    // Cargar categorías cuando se abre el modal
+    react_1.useEffect(function () {
+        var fetchCategories = function () { return __awaiter(_this, void 0, void 0, function () {
+            var res, data, error_1;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 3, , 4]);
+                        return [4 /*yield*/, fetch("/api/business/" + businessName + "/categories")];
+                    case 1:
+                        res = _a.sent();
+                        if (!res.ok)
+                            throw new Error("Error al obtener categorías");
+                        return [4 /*yield*/, res.json()];
+                    case 2:
+                        data = _a.sent();
+                        setCategories(data);
+                        return [3 /*break*/, 4];
+                    case 3:
+                        error_1 = _a.sent();
+                        console.error("❌ Error al obtener categorías:", error_1);
+                        return [3 /*break*/, 4];
+                    case 4: return [2 /*return*/];
+                }
+            });
+        }); };
+        if (isOpen) {
+            fetchCategories();
+        }
+    }, [isOpen]);
     var handleEditProduct = function (e) { return __awaiter(_this, void 0, void 0, function () {
-        var res, data;
+        var updatedProduct, res, data;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     e.preventDefault();
+                    updatedProduct = __assign(__assign({}, editingProduct), { price: parseFloat(editingProduct.price) });
                     return [4 /*yield*/, fetch("/api/business/" + businessName + "/update-product/" + editingProduct.id, {
                             method: "PUT",
                             headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify(editingProduct)
+                            body: JSON.stringify(updatedProduct)
                         })];
                 case 1:
                     res = _a.sent();
@@ -106,6 +138,11 @@ function EditProductDialog(_a) {
                     React.createElement("div", { className: "grid gap-2" },
                         React.createElement(label_1.Label, { htmlFor: "edit-description" }, "Descripci\u00F3n"),
                         React.createElement(textarea_1.Textarea, { id: "edit-description", value: editingProduct.description, onChange: function (e) { return setEditingProduct(__assign(__assign({}, editingProduct), { description: e.target.value })); }, rows: 3 })),
+                    React.createElement("div", { className: "grid gap-2" },
+                        React.createElement(label_1.Label, { htmlFor: "edit-category" }, "Categor\u00EDa"),
+                        React.createElement("select", { id: "edit-category", value: editingProduct.categoryId, onChange: function (e) { return setEditingProduct(__assign(__assign({}, editingProduct), { categoryId: e.target.value })); }, className: "border rounded p-2", required: true },
+                            React.createElement("option", { value: "", disabled: true }, "Selecciona una categor\u00EDa"),
+                            categories.map(function (category) { return (React.createElement("option", { key: category.id, value: category.id }, category.name)); }))),
                     React.createElement("div", { className: "grid gap-2" },
                         React.createElement(label_1.Label, { htmlFor: "edit-price" }, "Precio"),
                         React.createElement(input_1.Input, { id: "edit-price", type: "number", value: editingProduct.price, onChange: function (e) { return setEditingProduct(__assign(__assign({}, editingProduct), { price: e.target.value })); }, required: true })),

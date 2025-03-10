@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import prisma from "@/app/lib/prisma";
 
-export async function PUT(req: Request, { params }: { params: { businessSlug: string; productId: string } }) {
+export async function PUT(req: Request, { params }: { params: { businessSlug: string, productId: string } }) {
     try {
-        const { name, description, price, imageUrl } = await req.json();
+        const { name, description, price, imageUrl, categoryId } = await req.json();
 
         // Buscar el negocio por su slug
         const business = await prisma.business.findUnique({
@@ -16,8 +16,14 @@ export async function PUT(req: Request, { params }: { params: { businessSlug: st
 
         // Actualizar el producto
         const updatedProduct = await prisma.product.update({
-            where: { id: params.productId, businessId: business.id },
-            data: { name, description, price, imageUrl },
+            where: { id: params.productId },
+            data: {
+                name,
+                description,
+                price: parseFloat(price),
+                imageUrl,
+                categoryId: categoryId || null,
+            },
         });
 
         return NextResponse.json(updatedProduct, { status: 200 });

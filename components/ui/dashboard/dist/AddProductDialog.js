@@ -62,21 +62,54 @@ var input_1 = require("@/components/ui/input");
 var textarea_1 = require("@/components/ui/textarea");
 var label_1 = require("@/components/ui/label");
 var lucide_react_1 = require("lucide-react");
+var navigation_1 = require("next/navigation");
 function AddProductDialog(_a) {
     var _this = this;
     var businessName = _a.businessName, setBusiness = _a.setBusiness;
     var _b = react_1.useState({ name: "", description: "", price: "", imageUrl: "" }), newProduct = _b[0], setNewProduct = _b[1];
-    var _c = react_1.useState(false), isOpen = _c[0], setIsOpen = _c[1];
+    var _c = react_1.useState([]), categories = _c[0], setCategories = _c[1];
+    var _d = react_1.useState(""), selectedCategory = _d[0], setSelectedCategory = _d[1];
+    var _e = react_1.useState(false), isOpen = _e[0], setIsOpen = _e[1];
+    var params = navigation_1.useParams();
+    var businessSlug = params.businessSlug;
+    react_1.useEffect(function () {
+        var fetchCategories = function () { return __awaiter(_this, void 0, void 0, function () {
+            var res, data, error_1;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 3, , 4]);
+                        return [4 /*yield*/, fetch("/api/business/" + encodeURIComponent(businessSlug) + "/categories")];
+                    case 1:
+                        res = _a.sent();
+                        if (!res.ok)
+                            throw new Error("Error al obtener categorías");
+                        return [4 /*yield*/, res.json()];
+                    case 2:
+                        data = _a.sent();
+                        setCategories(data); // Guardar las categorías como { id, name }
+                        return [3 /*break*/, 4];
+                    case 3:
+                        error_1 = _a.sent();
+                        console.error("❌ Error al obtener categorías:", error_1);
+                        return [3 /*break*/, 4];
+                    case 4: return [2 /*return*/];
+                }
+            });
+        }); };
+        fetchCategories();
+    }, [businessSlug]);
     var handleAddProduct = function (e) { return __awaiter(_this, void 0, void 0, function () {
-        var res, data;
+        var newProductData, res, data;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     e.preventDefault();
+                    newProductData = __assign(__assign({}, newProduct), { price: parseFloat(newProduct.price), categoryId: selectedCategory });
                     return [4 /*yield*/, fetch("/api/business/" + businessName + "/add-product", {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify(newProduct)
+                            body: JSON.stringify(newProductData)
                         })];
                 case 1:
                     res = _a.sent();
@@ -86,6 +119,7 @@ function AddProductDialog(_a) {
                     if (res.ok) {
                         setBusiness(function (prev) { return (prev ? __assign(__assign({}, prev), { products: __spreadArrays(prev.products, [data]) }) : prev); });
                         setNewProduct({ name: "", description: "", price: "", imageUrl: "" });
+                        setSelectedCategory("");
                         setIsOpen(false);
                     }
                     else {
@@ -112,6 +146,11 @@ function AddProductDialog(_a) {
                     React.createElement("div", { className: "grid gap-2" },
                         React.createElement(label_1.Label, { htmlFor: "description" }, "Descripci\u00F3n"),
                         React.createElement(textarea_1.Textarea, { id: "description", value: newProduct.description, onChange: function (e) { return setNewProduct(__assign(__assign({}, newProduct), { description: e.target.value })); }, rows: 3 })),
+                    React.createElement("div", { className: "grid gap-2" },
+                        React.createElement(label_1.Label, { htmlFor: "category" }, "Categor\u00EDa"),
+                        React.createElement("select", { id: "category", value: selectedCategory, onChange: function (e) { return setSelectedCategory(e.target.value); }, className: "border rounded p-2", required: true },
+                            React.createElement("option", { value: "", disabled: true }, "Selecciona una categor\u00EDa"),
+                            categories.map(function (category) { return (React.createElement("option", { key: category.id, value: category.id }, category.name)); }))),
                     React.createElement("div", { className: "grid gap-2" },
                         React.createElement(label_1.Label, { htmlFor: "price" }, "Precio"),
                         React.createElement(input_1.Input, { id: "price", type: "number", value: newProduct.price, onChange: function (e) { return setNewProduct(__assign(__assign({}, newProduct), { price: e.target.value })); }, required: true })),
