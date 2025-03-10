@@ -1,48 +1,57 @@
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
-model Category {
-  id          String   @id @default(uuid())
-  name        String   @unique
-  description String?
-  products    Product[]
-}
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
   provider = "prisma-client-js"
 }
 
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
 model User {
-  id       String   @id @default(uuid())
-  email    String   @unique
-  password String
-  business Business?
+  id        String    @id @default(cuid())
+  email     String    @unique
+  password  String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  business  Business?
 }
 
 model Business {
-  id          String    @id @default(uuid())
-  name        String    @unique
-  slug        String  @unique
-  description String?  
-  logoUrl     String?   
-  user        User      @relation(fields: [userId], references: [id])
-  contact     String? 
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  logoUrl     String?
+  contact     String?
   hours       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   userId      String    @unique
-  products    Product[] 
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  products    Product[]
 }
 
 model Product {
-  id          String  @id @default(uuid())
+  id          String    @id @default(cuid())
   name        String
   description String?
   price       Float
   imageUrl    String?
-  business    Business @relation(fields: [businessId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   businessId  String
+  business    Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
   categoryId  String?
   category    Category? @relation(fields: [categoryId], references: [id])
 }
 
+model Category {
+  id        String    @id @default(cuid())
+  name      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  products  Product[]
+}
