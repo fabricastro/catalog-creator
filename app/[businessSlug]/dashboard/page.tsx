@@ -38,7 +38,6 @@ export default function Dashboard() {
     const router = useRouter();
 
     useEffect(() => {
-        console.log("📌 businessSlug recibido en el Dashboard:", businessSlug);
         if (!businessSlug) {
             console.error("🚨 Error: businessSlug está vacío o indefinido");
             return;

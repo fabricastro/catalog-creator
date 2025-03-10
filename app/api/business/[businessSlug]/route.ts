@@ -9,8 +9,6 @@ export async function GET(req: Request, context: { params: { businessSlug: strin
             return NextResponse.json({ error: "Parámetro businessSlug faltante" }, { status: 400 });
         }
 
-        console.log("🔍 Buscando negocio con slug:", params.businessSlug);
-
         const business = await prisma.business.findUnique({
             where: { slug: params.businessSlug },
             include: {

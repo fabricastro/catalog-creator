@@ -145,7 +145,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             </div>
                         </div>
                     </header>
-                    <main className="container py-6 md:py-8">{children}</main>
+                    {
+                    user && (
+                        <main className="container py-6 md:py-8">
+                            {children}
+                        </main>
+                    )}
                 </div>
             </div>
         </SidebarProvider>
