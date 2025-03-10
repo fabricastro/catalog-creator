@@ -1,7 +1,9 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
+import type React from "react"
+
+import { useEffect, useState } from "react"
+import { Button } from "@/components/ui/button"
 import {
     Dialog,
     DialogContent,
@@ -10,68 +12,78 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Plus } from "lucide-react";
-import { useParams } from "next/navigation";
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
+import { Plus } from "lucide-react"
+import { useParams } from "next/navigation"
+
+interface Category {
+    id: string
+    name: string
+}
 
 interface AddProductDialogProps {
-    businessName: string;
-    setBusiness: (business: any) => void;
+    businessName: string
+    setBusiness: (business: any) => void
 }
 
 export default function AddProductDialog({ businessName, setBusiness }: AddProductDialogProps) {
-    const [newProduct, setNewProduct] = useState({ name: "", description: "", price: "", imageUrl: "" });
-    const [categories, setCategories] = useState<string[]>([]);
-    const [selectedCategory, setSelectedCategory] = useState("");
-    const [isOpen, setIsOpen] = useState(false);
-    const params = useParams();
-    const businessSlug = params.businessSlug as string;
+    const [newProduct, setNewProduct] = useState({ name: "", description: "", price: "", imageUrl: "" })
+    const [categories, setCategories] = useState<Category[]>([])
+    const [selectedCategory, setSelectedCategory] = useState("")
+    const [isOpen, setIsOpen] = useState(false)
+    const params = useParams()
+    const businessSlug = params.businessSlug as string
 
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const res = await fetch(`/api/business/${encodeURIComponent(businessSlug)}/categories`);
-                if (!res.ok) throw new Error("Error al obtener categorías");
-                const data = await res.json();
-                setCategories(data); // Guardar las categorías como { id, name }
+                const res = await fetch(`/api/business/${encodeURIComponent(businessSlug)}/categories`)
+                if (!res.ok) throw new Error("Error al obtener categorías")
+                const data = await res.json()
+                setCategories(data) // Guardar las categorías como { id, name }
             } catch (error) {
-                console.error("❌ Error al obtener categorías:", error);
+                console.error("❌ Error al obtener categorías:", error)
             }
-        };
+        }
 
-        fetchCategories();
-    }, [businessSlug]);
-
+        if (isOpen) {
+            fetchCategories()
+        }
+    }, [businessSlug, isOpen])
 
     const handleAddProduct = async (e: React.FormEvent) => {
-        e.preventDefault();
+        e.preventDefault()
 
         const newProductData = {
             ...newProduct,
-            price: parseFloat(newProduct.price), // ✅ Convertir a número
+            price: Number.parseFloat(newProduct.price), // ✅ Convertir a número
             categoryId: selectedCategory, // ✅ Enviar el ID de la categoría
-        };
-
-        const res = await fetch(`/api/business/${businessName}/add-product`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(newProductData),
-        });
-
-        const data = await res.json();
-        if (res.ok) {
-            setBusiness((prev: any) => (prev ? { ...prev, products: [...prev.products, data] } : prev));
-            setNewProduct({ name: "", description: "", price: "", imageUrl: "" });
-            setSelectedCategory("");
-            setIsOpen(false);
-        } else {
-            alert("Error al agregar el producto: " + data.error);
         }
-    };
 
+        try {
+            const res = await fetch(`/api/business/${businessName}/add-product`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(newProductData),
+            })
+
+            const data = await res.json()
+            if (res.ok) {
+                setBusiness((prev: any) => (prev ? { ...prev, products: [...prev.products, data] } : prev))
+                setNewProduct({ name: "", description: "", price: "", imageUrl: "" })
+                setSelectedCategory("")
+                setIsOpen(false)
+            } else {
+                alert("Error al agregar el producto: " + data.error)
+            }
+        } catch (error) {
+            console.error("Error al agregar producto:", error)
+            alert("Error al agregar el producto. Por favor intenta de nuevo.")
+        }
+    }
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -89,11 +101,21 @@ export default function AddProductDialog({ businessName, setBusiness }: AddProdu
                     <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
                             <Label htmlFor="name">Nombre</Label>
-                            <Input id="name" value={newProduct.name} onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })} required />
+                            <Input
+                                id="name"
+                                value={newProduct.name}
+                                onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+                                required
+                            />
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="description">Descripción</Label>
-                            <Textarea id="description" value={newProduct.description} onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })} rows={3} />
+                            <Textarea
+                                id="description"
+                                value={newProduct.description}
+                                onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
+                                rows={3}
+                            />
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="category">Categoría</Label>
@@ -102,9 +124,8 @@ export default function AddProductDialog({ businessName, setBusiness }: AddProdu
                                 value={selectedCategory}
                                 onChange={(e) => setSelectedCategory(e.target.value)}
                                 className="border rounded p-2"
-                                required
                             >
-                                <option value="" disabled>Selecciona una categoría</option>
+                                <option value="">Selecciona una categoría</option>
                                 {categories.map((category) => (
                                     <option key={category.id} value={category.id}>
                                         {category.name}
@@ -114,11 +135,22 @@ export default function AddProductDialog({ businessName, setBusiness }: AddProdu
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="price">Precio</Label>
-                            <Input id="price" type="number" value={newProduct.price} onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })} required />
+                            <Input
+                                id="price"
+                                type="number"
+                                value={newProduct.price}
+                                onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
+                                required
+                            />
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="imageUrl">URL de la imagen</Label>
-                            <Input id="imageUrl" value={newProduct.imageUrl} onChange={(e) => setNewProduct({ ...newProduct, imageUrl: e.target.value })} placeholder="https://ejemplo.com/imagen.jpg" />
+                            <Input
+                                id="imageUrl"
+                                value={newProduct.imageUrl}
+                                onChange={(e) => setNewProduct({ ...newProduct, imageUrl: e.target.value })}
+                                placeholder="https://ejemplo.com/imagen.jpg"
+                            />
                         </div>
                     </div>
                     <DialogFooter>
@@ -130,5 +162,6 @@ export default function AddProductDialog({ businessName, setBusiness }: AddProdu
                 </form>
             </DialogContent>
         </Dialog>
-    );
+    )
 }
+

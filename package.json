@@ -4,10 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "prisma generate && prisma migrate deploy && next build",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts",
+    "db:reset": "prisma migrate reset"
   },
   "dependencies": {
     "@prisma/client": "6.4.1",
@@ -44,6 +48,7 @@
     "eslint-config-next": "15.2.1",
     "prisma": "6.4.1",
     "tailwindcss": "4.0.12",
+    "ts-node": "^10.9.2",
     "typescript": "5.8.2"
   }
 }
