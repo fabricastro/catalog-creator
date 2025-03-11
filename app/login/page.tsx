@@ -1,65 +1,184 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import type React from "react"
+
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { ArrowLeft, BookOpen, Mail, Lock, LogIn } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { useToast } from "@/hooks/use-toast"
 
 export default function Login() {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [error, setError] = useState("");
-    const router = useRouter();
+    const [email, setEmail] = useState("")
+    const [password, setPassword] = useState("")
+    const [error, setError] = useState("")
+    const [isLoading, setIsLoading] = useState(false)
+    const router = useRouter()
+    const { toast } = useToast()
 
     const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError("");
+        e.preventDefault()
+        setError("")
+        setIsLoading(true)
 
-        const res = await fetch("/api/auth/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password }),
-        });
+        try {
+            const res = await fetch("/api/auth/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password }),
+            })
 
-        const data = await res.json();
-        if (res.ok) {
-            if (!data.id) {
-                setError("Error al obtener el usuario.");
-                return;
-            }
+            const data = await res.json()
+            if (res.ok) {
+                if (!data.id) {
+                    setError("Error al obtener el usuario.")
+                    return
+                }
 
-            const businessRes = await fetch(`/api/user/${data.id}/business`);
-            const businessData = await businessRes.json();
+                toast({
+                    title: "Inicio de sesión exitoso",
+                    description: "Redirigiendo al dashboard...",
+                })
 
-            if (businessRes.ok && businessData.name) {
-                router.push(`/${businessData.name}/dashboard`); // Redirigir por nombre de negocio
+                const businessRes = await fetch(`/api/user/${data.id}/business`)
+                const businessData = await businessRes.json()
+
+                if (businessRes.ok && businessData.name) {
+                    router.push(`/${businessData.name}/dashboard`) // Redirigir por nombre de negocio
+                } else {
+                    router.push("/")
+                }
             } else {
-                router.push("/");
+                setError(data.error)
             }
-        } else {
-            setError(data.error);
+        } catch (err) {
+            setError("Ocurrió un error al iniciar sesión. Por favor intente nuevamente.")
+        } finally {
+            setIsLoading(false)
         }
     }
 
     return (
-        <div className="flex justify-center items-center min-h-screen">
-            <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow-md w-80">
-                <h2 className="text-xl font-bold mb-4">Iniciar Sesión</h2>
-                {error && <p className="text-red-500">{error}</p>}
-                <input
-                    type="email"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full p-2 border rounded mb-2"
-                />
-                <input
-                    type="password"
-                    placeholder="Contraseña"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full p-2 border rounded mb-2"
-                />
-                <button type="submit" className="w-full bg-blue-500 text-white p-2 rounded">Entrar</button>
-            </form>
+        <div className="min-h-screen flex flex-col">
+            {/* Header with logo */}
+            <header className="border-b py-4">
+                <div className="container px-4 md:px-6">
+                    <Link href="/" className="flex items-center gap-2 font-bold">
+                        <BookOpen className="h-6 w-6" />
+                        <span>PediloApp</span>
+                    </Link>
+                </div>
+            </header>
+
+            {/* Main content */}
+            <main className="flex-1 flex items-center justify-center p-4 md:p-8">
+                <div className="w-full max-w-md">
+                    <Card className="border-none shadow-lg">
+                        <CardHeader className="space-y-1">
+                            <div className="flex items-center justify-between">
+                                <CardTitle className="text-2xl font-bold">Iniciar sesión</CardTitle>
+                                <Link href="/" className="text-sm text-muted-foreground hover:text-primary flex items-center gap-1">
+                                    <ArrowLeft className="h-4 w-4" />
+                                    Volver
+                                </Link>
+                            </div>
+                            <CardDescription>Ingresa tus credenciales para acceder a tu cuenta</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <form onSubmit={handleSubmit} className="space-y-4">
+                                {error && (
+                                    <Alert variant="destructive" className="text-sm">
+                                        <AlertDescription>{error}</AlertDescription>
+                                    </Alert>
+                                )}
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="email">Correo electrónico</Label>
+                                    <div className="relative">
+                                        <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                        <Input
+                                            id="email"
+                                            type="email"
+                                            placeholder="tu@email.com"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            className="pl-10"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <Label htmlFor="password">Contraseña</Label>
+                                        <Link href="/forgot-password" className="text-xs text-primary hover:underline">
+                                            ¿Olvidaste tu contraseña?
+                                        </Link>
+                                    </div>
+                                    <div className="relative">
+                                        <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                        <Input
+                                            id="password"
+                                            type="password"
+                                            placeholder="••••••••"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            className="pl-10"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                <Button type="submit" className="w-full" disabled={isLoading}>
+                                    {isLoading ? (
+                                        <>
+                                            <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
+                                            Iniciando sesión...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <LogIn className="mr-2 h-4 w-4" />
+                                            Iniciar sesión
+                                        </>
+                                    )}
+                                </Button>
+                            </form>
+                        </CardContent>
+                        <CardFooter className="flex flex-col space-y-4 border-t pt-4">
+                            <div className="text-center text-sm">
+                                Al iniciar sesión, aceptas nuestros{" "}
+                                <Link href="/terms" className="text-primary hover:underline">
+                                    Términos de servicio
+                                </Link>{" "}
+                                y{" "}
+                                <Link href="/privacy" className="text-primary hover:underline">
+                                    Política de privacidad
+                                </Link>
+                            </div>
+                            <div className="text-center text-sm">
+                                ¿No tienes una cuenta?{" "}
+                                <Link href="/register" className="text-primary font-medium hover:underline">
+                                    Registrarse
+                                </Link>
+                            </div>
+                        </CardFooter>
+                    </Card>
+                </div>
+            </main>
+
+            {/* Footer */}
+            <footer className="border-t py-4 bg-muted/40">
+                <div className="container px-4 text-center text-sm text-muted-foreground">
+                    © {new Date().getFullYear()} PediloApp. Todos los derechos reservados.
+                </div>
+            </footer>
         </div>
-    );
+    )
 }
+

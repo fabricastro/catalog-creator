@@ -45,7 +45,6 @@ export default function Dashboard() {
 
         const fetchBusiness = async () => {
             try {
-                console.log("🔍 Fetching business:", businessSlug);
                 setLoading(true);
                 setError(null);
                 const res = await fetch(`/api/business/${encodeURIComponent(businessSlug)}`);
@@ -59,7 +58,6 @@ export default function Dashboard() {
 
                 setBusiness(data);
             } catch (error: any) {
-                console.error("❌ Error fetching business data:", error);
                 setError(error.message);
                 setBusiness(null);
             } finally {

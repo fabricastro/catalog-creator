@@ -69,7 +69,6 @@ export default function BusinessSettings() {
                     // address: data.address || "",
                 })
             } catch (error) {
-                console.error("❌ Error fetching business data:", error)
                 toast({
                     title: "Error",
                     description: "No se pudo cargar la información del negocio",

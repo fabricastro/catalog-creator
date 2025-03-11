@@ -14,9 +14,9 @@ export default function Home() {
         <div className="  flex h-16 items-center justify-between px-4 md:px-6">
           <div className="flex items-center gap-2 font-bold">
             <BookOpen className="h-6 w-6" />
-            <span>CatálogoFácil</span>
+            <span>PediloApp</span>
           </div>
-          <nav className="hidden md:flex gap-6">
+          {/* <nav className="hidden md:flex gap-6">
             <Link href="#features" className="text-sm font-medium hover:underline underline-offset-4">
               Características
             </Link>
@@ -26,7 +26,7 @@ export default function Home() {
             <Link href="#testimonials" className="text-sm font-medium hover:underline underline-offset-4">
               Testimonios
             </Link>
-          </nav>
+          </nav> */}
           <div className="flex items-center gap-4">
             <Link href="/login" className="text-sm font-medium hover:underline underline-offset-4">
               Iniciar Sesión
@@ -46,7 +46,7 @@ export default function Home() {
               <div className="flex flex-col justify-center space-y-4">
                 <div className="space-y-2">
                   <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
-                    Creador de Catálogos Profesionales
+                    Creador de Catálogos
                   </h1>
                   <p className="text-muted-foreground md:text-xl">
                     Convierte tu lista de productos en un catálogo digital atractivo en minutos, sin necesidad de
@@ -59,11 +59,11 @@ export default function Home() {
                       Comenzar Gratis <ArrowRight className="h-4 w-4" />
                     </Button>
                   </Link>
-                  <Link href="#demo">
+                  {/* <Link href="#demo">
                     <Button size="lg" variant="outline">
                       Ver Demo
                     </Button>
-                  </Link>
+                  </Link> */}
                 </div>
               </div>
             </div>
@@ -89,7 +89,7 @@ export default function Home() {
                   <CardDescription>Crea tu catálogo en minutos con nuestra interfaz intuitiva</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p>Sube tus productos, personaliza el diseño y descarga tu catálogo listo para compartir.</p>
+                  <p>Sube tus productos y descarga tu catálogo listo para compartir.</p>
                 </CardContent>
               </Card>
               <Card>
