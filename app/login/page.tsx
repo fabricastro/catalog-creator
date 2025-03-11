@@ -49,8 +49,9 @@ export default function Login() {
                 const businessRes = await fetch(`/api/user/${data.id}/business`)
                 const businessData = await businessRes.json()
 
-                if (businessRes.ok && businessData.name) {
-                    router.push(`/${businessData.name}/dashboard`) // Redirigir por nombre de negocio
+                if (businessRes.ok && businessData.slug) {
+                    const normalizedSlug = businessData.slug.toLowerCase().replace(/\s+/g, "-")
+                    router.push(`/${normalizedSlug}/dashboard`)
                 } else {
                     router.push("/")
                 }

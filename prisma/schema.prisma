@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -22,14 +19,14 @@ model User {
 model Business {
   id          String    @id @default(cuid())
   name        String
-  slug        String    @unique
+  userId      String    @unique
   description String?
   logoUrl     String?
   contact     String?
   hours       String?
+  slug        String    @unique
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-  userId      String    @unique
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   products    Product[]
 }
@@ -40,11 +37,11 @@ model Product {
   description String?
   price       Float
   imageUrl    String?
+  businessId  String
+  categoryId  String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-  businessId  String
   business    Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  categoryId  String?
   category    Category? @relation(fields: [categoryId], references: [id])
 }
 

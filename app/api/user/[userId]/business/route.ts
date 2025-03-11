@@ -1,22 +1,26 @@
-// app/api/user/[userId]/business/route.ts
 import { type NextRequest, NextResponse } from "next/server"
 import prisma from "@/app/lib/prisma"
 
-export async function GET(request: NextRequest, { params }: { params: { userId: string } }) {
+export async function GET(request: NextRequest, context: { params: { userId: string } }) {
     try {
+        const { userId } = context.params
+
+        if (!userId) {
+            return NextResponse.json({ error: "Parámetro userId faltante" }, { status: 400 })
+        }
+        
         const user = await prisma.user.findUnique({
-            where: { id: params.userId },
-            include: { business: true }, // Incluye el negocio asociado
+            where: { id: userId },
+            include: { business: true },
         })
 
         if (!user || !user.business) {
-            return NextResponse.json({ error: "Negocio no encontrado." }, { status: 404 })
+            return NextResponse.json({ error: "Negocio no encontrado para este usuario" }, { status: 404 })
         }
 
-        return NextResponse.json({ name: user.business.name }, { status: 200 })
+        return NextResponse.json(user.business, { status: 200 })
     } catch (error) {
-        console.error("Error obteniendo el negocio del usuario:", error)
-        return NextResponse.json({ error: "Error en el servidor." }, { status: 500 })
+        console.error("❌ Error obteniendo negocio del usuario:", error)
+        return NextResponse.json({ error: "Error en el servidor" }, { status: 500 })
     }
 }
-
