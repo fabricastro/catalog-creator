@@ -112,52 +112,55 @@ export default function BusinessSettings() {
     }
 
     const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
+        e.preventDefault();
 
         if (!validateForm()) {
             toast({
                 title: "Error de validación",
                 description: "Por favor corrige los errores en el formulario",
                 variant: "destructive",
-            })
-            return
+            });
+            return;
         }
 
-        setSaving(true)
+        setSaving(true);
 
         try {
             const res = await fetch(`/api/business/${businessSlug}/update`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formData),
-            })
+            });
 
             if (res.ok) {
+                const updatedBusiness = await res.json(); // Obtener datos actualizados
+
                 toast({
                     title: "Cambios guardados",
                     description: "La información de tu negocio ha sido actualizada correctamente",
-                })
+                });
 
-                // Update local business state
-                setBusiness({
-                    ...business!,
-                    ...formData,
-                })
+                if (updatedBusiness.slug !== businessSlug) {
+                    router.replace(`/${updatedBusiness.slug}/dashboard`); // Redirigir al nuevo slug
+                }
+
+                setBusiness(updatedBusiness);
             } else {
-                const data = await res.json()
-                throw new Error(data.error || "Error al actualizar la información")
+                const data = await res.json();
+                throw new Error(data.error || "Error al actualizar la información");
             }
         } catch (error) {
-            console.error("Error updating business:", error)
+            console.error("Error actualizando el negocio:", error);
             toast({
                 title: "Error",
                 description: error instanceof Error ? error.message : "Error al actualizar la información",
                 variant: "destructive",
-            })
+            });
         } finally {
-            setSaving(false)
+            setSaving(false);
         }
-    }
+    };
+
 
     if (loading) {
         return (
@@ -213,15 +216,15 @@ export default function BusinessSettings() {
                     <TabsTrigger value="contact">Contacto</TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="general">
-                    <div className="grid gap-6 md:grid-cols-2">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Información del negocio</CardTitle>
-                                <CardDescription>Actualiza la información básica de tu negocio</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <form id="settings-form" onSubmit={handleSubmit} className="space-y-4">
+                <form id="settings-form" onSubmit={handleSubmit} className="space-y-4">
+                    <TabsContent value="general">
+                        <div className="grid gap-6 md:grid-cols-2">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Información del negocio</CardTitle>
+                                    <CardDescription>Actualiza la información básica de tu negocio</CardDescription>
+                                </CardHeader>
+                                <CardContent>
                                     <div className="space-y-2">
                                         <Label htmlFor="name">Nombre del negocio</Label>
                                         <Input
@@ -257,182 +260,182 @@ export default function BusinessSettings() {
                                             placeholder="Calle Ejemplo 123, Ciudad"
                                         />
                                     </div> */}
-                                </form>
-                            </CardContent>
-                        </Card>
 
-                        <div className="space-y-6">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Vista previa</CardTitle>
-                                    <CardDescription>Así se verá tu negocio en PediloApp</CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="border rounded-lg p-4 bg-background">
-                                        <div className="flex items-center gap-4">
-                                            <Avatar className="h-16 w-16">
-                                                <AvatarImage src={formData.logoUrl || ""} alt={formData.name} />
-                                                <AvatarFallback className="text-xl">{formData.name.charAt(0)}</AvatarFallback>
-                                            </Avatar>
+                                </CardContent>
+                            </Card>
 
-                                            <div>
-                                                <h3 className="text-lg font-bold">{formData.name || "Nombre del negocio"}</h3>
-                                                <p className="text-sm text-muted-foreground line-clamp-2">
-                                                    {formData.description || "Descripción del negocio"}
-                                                </p>
+                            <div className="space-y-6">
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>Vista previa</CardTitle>
+                                        <CardDescription>Así se verá tu negocio en PediloApp</CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="border rounded-lg p-4 bg-background">
+                                            <div className="flex items-center gap-4">
+                                                <Avatar className="h-16 w-16">
+                                                    <AvatarImage src={formData.logoUrl || ""} alt={formData.name} />
+                                                    <AvatarFallback className="text-xl">{formData.name.charAt(0)}</AvatarFallback>
+                                                </Avatar>
 
-                                                <div className="flex flex-wrap gap-4 mt-2">
-                                                    {formData.hours && (
-                                                        <div className="flex items-center gap-1 text-xs">
-                                                            <Clock className="h-3 w-3" />
-                                                            <span>{formData.hours}</span>
-                                                        </div>
-                                                    )}
+                                                <div>
+                                                    <h3 className="text-lg font-bold">{formData.name || "Nombre del negocio"}</h3>
+                                                    <p className="text-sm text-muted-foreground line-clamp-2">
+                                                        {formData.description || "Descripción del negocio"}
+                                                    </p>
 
-                                                    {formData.contact && (
-                                                        <div className="flex items-center gap-1 text-xs">
-                                                            <Phone className="h-3 w-3" />
-                                                            <span>{formData.contact}</span>
-                                                        </div>
-                                                    )}
+                                                    <div className="flex flex-wrap gap-4 mt-2">
+                                                        {formData.hours && (
+                                                            <div className="flex items-center gap-1 text-xs">
+                                                                <Clock className="h-3 w-3" />
+                                                                <span>{formData.hours}</span>
+                                                            </div>
+                                                        )}
 
-                                                    {/* {formData.address && (
+                                                        {formData.contact && (
+                                                            <div className="flex items-center gap-1 text-xs">
+                                                                <Phone className="h-3 w-3" />
+                                                                <span>{formData.contact}</span>
+                                                            </div>
+                                                        )}
+
+                                                        {/* {formData.address && (
                                                         <div className="flex items-center gap-1 text-xs">
                                                             <Building2 className="h-3 w-3" />
                                                             <span>{formData.address}</span>
                                                         </div>
                                                     )} */}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
+                                    </CardContent>
+                                </Card>
 
-                            <Alert>
-                                <Info className="h-4 w-4" />
-                                <AlertTitle>Consejo</AlertTitle>
-                                <AlertDescription>
-                                    Una buena descripción y datos de contacto actualizados ayudan a tus clientes a encontrarte más
-                                    fácilmente.
-                                </AlertDescription>
-                            </Alert>
-                        </div>
-                    </div>
-                </TabsContent>
-
-                <TabsContent value="appearance">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Apariencia</CardTitle>
-                            <CardDescription>Personaliza la apariencia de tu negocio en PediloApp</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="logoUrl">URL del logo</Label>
-                                    <div className="flex gap-4 items-start">
-                                        <div className="flex-1">
-                                            <Input
-                                                id="logoUrl"
-                                                name="logoUrl"
-                                                value={formData.logoUrl}
-                                                onChange={handleChange}
-                                                placeholder="https://ejemplo.com/logo.png"
-                                            />
-                                            {errors.logoUrl && <p className="text-sm text-destructive mt-1">{errors.logoUrl}</p>}
-                                            <p className="text-sm text-muted-foreground mt-1">
-                                                Ingresa la URL de tu logo. Recomendamos una imagen cuadrada de al menos 200x200 píxeles.
-                                            </p>
-                                        </div>
-
-                                        <Avatar className="h-20 w-20 border">
-                                            <AvatarImage src={formData.logoUrl || ""} alt={formData.name} />
-                                            <AvatarFallback className="text-2xl">{formData.name.charAt(0)}</AvatarFallback>
-                                        </Avatar>
-                                    </div>
-                                </div>
-
-                                <div className="mt-6">
-                                    <Button variant="outline" className="gap-2" disabled>
-                                        <Upload className="h-4 w-4" />
-                                        Subir logo (próximamente)
-                                    </Button>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-
-                <TabsContent value="contact">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Información de contacto</CardTitle>
-                            <CardDescription>Actualiza la información de contacto de tu negocio</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="contact">Teléfono / WhatsApp</Label>
-                                    <div className="flex gap-2 items-center">
-                                        <Phone className="h-4 w-4 text-muted-foreground" />
-                                        <Input
-                                            id="contact"
-                                            name="contact"
-                                            value={formData.contact}
-                                            onChange={handleChange}
-                                            placeholder="+1234567890"
-                                        />
-                                    </div>
-                                    {errors.contact && <p className="text-sm text-destructive">{errors.contact}</p>}
-                                    <p className="text-sm text-muted-foreground">
-                                        Este número se utilizará para recibir pedidos por WhatsApp. Incluye el código de país.
-                                    </p>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="hours">Horario de atención</Label>
-                                    <div className="flex gap-2 items-center">
-                                        <Clock className="h-4 w-4 text-muted-foreground" />
-                                        <Input
-                                            id="hours"
-                                            name="hours"
-                                            value={formData.hours}
-                                            onChange={handleChange}
-                                            placeholder="Lun-Vie: 9am-6pm, Sáb: 10am-3pm"
-                                        />
-                                    </div>
-                                </div>
-
-                                <Alert className="mt-6">
+                                <Alert>
                                     <Info className="h-4 w-4" />
-                                    <AlertTitle>Importante</AlertTitle>
+                                    <AlertTitle>Consejo</AlertTitle>
                                     <AlertDescription>
-                                        Asegúrate de que tu número de WhatsApp esté activo y pueda recibir mensajes. Los clientes utilizarán
-                                        este número para realizar sus pedidos.
+                                        Una buena descripción y datos de contacto actualizados ayudan a tus clientes a encontrarte más
+                                        fácilmente.
                                     </AlertDescription>
                                 </Alert>
                             </div>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-            </Tabs>
+                        </div>
+                    </TabsContent>
 
-            <div className="mt-6 flex justify-end">
-                <Button type="submit" form="settings-form" size="lg" disabled={saving} className="gap-2">
-                    {saving ? (
-                        <>
-                            <div className="h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin"></div>
-                            Guardando...
-                        </>
-                    ) : (
-                        <>
-                            <Save className="h-4 w-4" />
-                            Guardar cambios
-                        </>
-                    )}
-                </Button>
-            </div>
+                    <TabsContent value="appearance">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Apariencia</CardTitle>
+                                <CardDescription>Personaliza la apariencia de tu negocio en PediloApp</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="logoUrl">URL del logo</Label>
+                                        <div className="flex gap-4 items-start">
+                                            <div className="flex-1">
+                                                <Input
+                                                    id="logoUrl"
+                                                    name="logoUrl"
+                                                    value={formData.logoUrl}
+                                                    onChange={handleChange}
+                                                    placeholder="https://ejemplo.com/logo.png"
+                                                />
+                                                {errors.logoUrl && <p className="text-sm text-destructive mt-1">{errors.logoUrl}</p>}
+                                                <p className="text-sm text-muted-foreground mt-1">
+                                                    Ingresa la URL de tu logo. Recomendamos una imagen cuadrada de al menos 200x200 píxeles.
+                                                </p>
+                                            </div>
+
+                                            <Avatar className="h-20 w-20 border">
+                                                <AvatarImage src={formData.logoUrl || ""} alt={formData.name} />
+                                                <AvatarFallback className="text-2xl">{formData.name.charAt(0)}</AvatarFallback>
+                                            </Avatar>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-6">
+                                        <Button variant="outline" className="gap-2" disabled>
+                                            <Upload className="h-4 w-4" />
+                                            Subir logo (próximamente)
+                                        </Button>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    <TabsContent value="contact">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Información de contacto</CardTitle>
+                                <CardDescription>Actualiza la información de contacto de tu negocio</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="contact">Teléfono / WhatsApp</Label>
+                                        <div className="flex gap-2 items-center">
+                                            <Phone className="h-4 w-4 text-muted-foreground" />
+                                            <Input
+                                                id="contact"
+                                                name="contact"
+                                                value={formData.contact}
+                                                onChange={handleChange}
+                                                placeholder="+1234567890"
+                                            />
+                                        </div>
+                                        {errors.contact && <p className="text-sm text-destructive">{errors.contact}</p>}
+                                        <p className="text-sm text-muted-foreground">
+                                            Este número se utilizará para recibir pedidos por WhatsApp. Incluye el código de país.
+                                        </p>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="hours">Horario de atención</Label>
+                                        <div className="flex gap-2 items-center">
+                                            <Clock className="h-4 w-4 text-muted-foreground" />
+                                            <Input
+                                                id="hours"
+                                                name="hours"
+                                                value={formData.hours}
+                                                onChange={handleChange}
+                                                placeholder="Lun-Vie: 9am-6pm, Sáb: 10am-3pm"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <Alert className="mt-6">
+                                        <Info className="h-4 w-4" />
+                                        <AlertTitle>Importante</AlertTitle>
+                                        <AlertDescription>
+                                            Asegúrate de que tu número de WhatsApp esté activo y pueda recibir mensajes. Los clientes utilizarán
+                                            este número para realizar sus pedidos.
+                                        </AlertDescription>
+                                    </Alert>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                </form>
+                <div className="mt-6 flex justify-end">
+                    <Button type="submit" form="settings-form" size="lg" disabled={saving} className="gap-2">
+                        {saving ? (
+                            <>
+                                <div className="h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin"></div>
+                                Guardando...
+                            </>
+                        ) : (
+                            <>
+                                <Save className="h-4 w-4" />
+                                Guardar cambios
+                            </>
+                        )}
+                    </Button>
+                </div>
+            </Tabs>
         </div>
     )
 }

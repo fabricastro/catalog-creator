@@ -26,7 +26,9 @@ export async function POST(req: Request) {
         }
 
         const token = sign({ id: user.id, email: user.email }, SECRET_KEY, { expiresIn: "7d" });
-        cookies().set("token", token, { httpOnly: true, secure: process.env.NODE_ENV === "production", maxAge: 60 * 60 * 24 * 7 });
+
+        const cookieStore = await cookies();
+        cookieStore.set("token", token, { httpOnly: true, secure: process.env.NODE_ENV === "production", maxAge: 60 * 60 * 24 * 7 });
 
         return NextResponse.json({ message: "Inicio de sesión exitoso.", id: user.id }, { status: 200 });
     } catch (error) {

@@ -1,18 +1,18 @@
 import { type NextRequest, NextResponse } from "next/server";
 import prisma from "@/app/lib/prisma";
 
-export async function GET(request: NextRequest, context: { params?: { businessSlug?: string } }) {
+export async function GET(request: NextRequest, context: { params: { businessSlug?: string } }) {
     try {
-        const { params } = context;
+        const { businessSlug } = await context.params;
 
-        if (!params?.businessSlug) {
+        if (!businessSlug) {
             return NextResponse.json({ error: "Parámetro businessSlug faltante" }, { status: 400 });
         }
 
-        const businessSlug = params.businessSlug.toLowerCase();
+        const businessSlugLower = businessSlug.toLowerCase();
 
         const business = await prisma.business.findUnique({
-            where: { slug: businessSlug },
+            where: { slug: businessSlugLower },
             include: {
                 products: {
                     include: { category: true },
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest, context: { params?: { businessSl
             { status: 200 }
         );
     } catch (error) {
-        console.error("Error obteniendo negocio:", error);
+        console.error("❌ Error obteniendo negocio:", error);
         return NextResponse.json({ error: "Error en el servidor" }, { status: 500 });
     }
 }

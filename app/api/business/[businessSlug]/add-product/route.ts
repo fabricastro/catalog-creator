@@ -3,7 +3,6 @@ import prisma from "@/app/lib/prisma"
 
 export async function POST(request: NextRequest, { params }: { params: { businessSlug: string } }) {
     try {
-        // ✅ Extraer correctamente los params
         const { businessSlug } = params
         const { name, description, price, imageUrl, categoryId } = await request.json()
 

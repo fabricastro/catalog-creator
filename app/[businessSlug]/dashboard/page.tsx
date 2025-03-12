@@ -49,12 +49,9 @@ export default function Dashboard() {
                 setError(null);
                 const res = await fetch(`/api/business/${encodeURIComponent(businessSlug)}`);
 
-                console.log("📥 API Response:", res.status);
-
                 if (!res.ok) throw new Error(`Error ${res.status}: No se pudo obtener el negocio`);
 
                 const data = await res.json();
-                console.log("✅ Business Data:", data);
 
                 setBusiness(data);
             } catch (error: any) {
