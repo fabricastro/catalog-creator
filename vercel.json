@@ -5,13 +5,12 @@
             "use": "@vercel/next",
             "config": {
                 "installCommand": "pnpm install --no-frozen-lockfile",
-                "buildCommand": "prisma generate && next build"
+                "buildCommand": "prisma generate && prisma migrate deploy && next build"
             }
         }
     ],
     "build": {
         "env": {
-            "PRISMA_GENERATE_DATAPROXY": "true",
             "NEXT_DISABLE_ESLINT": "1"
         }
     }
