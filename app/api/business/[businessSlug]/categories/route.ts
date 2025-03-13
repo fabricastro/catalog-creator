@@ -1,50 +1,56 @@
-import { type NextRequest, NextResponse } from "next/server"
-import prisma from "@/app/lib/prisma"
+import { type NextRequest, NextResponse } from "next/server";
+import prisma from "@/app/lib/prisma";
 
-export async function GET(request: NextRequest, { params }: { params: { businessSlug: string } }) {
+export async function GET(request: NextRequest, context: { params: { businessSlug: string } }) {
     try {
-        const categories = await prisma.category.findMany()
-        return NextResponse.json(categories, { status: 200 })
-    } catch (error) {
-        console.error("Error obteniendo categorías:", error)
-        return NextResponse.json({ error: "Error en el servidor" }, { status: 500 })
-    }
-}
+        // Esperar `context.params` antes de acceder a `businessSlug`
+        const { businessSlug } = await context.params;
 
-export async function POST(request: NextRequest, { params }: { params: { businessSlug: string } }) {
-    try {
-        const { name } = await request.json()
-        if (!name) return NextResponse.json({ error: "Nombre requerido" }, { status: 400 })
+        const business = await prisma.business.findUnique({
+            where: { slug: businessSlug },
+            include: { categories: true },
+        });
 
-        const newCategory = await prisma.category.create({
-            data: { name },
-        })
-
-        return NextResponse.json(newCategory, { status: 201 })
-    } catch (error) {
-        console.error("Error al crear categoría:", error)
-        return NextResponse.json({ error: "Error en el servidor" }, { status: 500 })
-    }
-}
-
-// ✅ Método PUT para actualizar una categoría
-export async function PUT(request: NextRequest, { params }: { params: { businessSlug: string } }) {
-    try {
-        const { id, name } = await request.json()
-
-        if (!id || !name) {
-            return NextResponse.json({ error: "ID y nombre son requeridos" }, { status: 400 })
+        if (!business) {
+            return NextResponse.json({ error: "Negocio no encontrado" }, { status: 404 });
         }
 
-        const updatedCategory = await prisma.category.update({
-            where: { id },
-            data: { name },
-        })
-
-        return NextResponse.json(updatedCategory, { status: 200 })
+        return NextResponse.json(business.categories, { status: 200 });
     } catch (error) {
-        console.error("Error al actualizar categoría:", error)
-        return NextResponse.json({ error: "Error en el servidor" }, { status: 500 })
+        console.error("Error obteniendo categorías:", error);
+        return NextResponse.json({ error: "Error en el servidor" }, { status: 500 });
     }
 }
 
+
+export async function POST(request: NextRequest, context: { params: { businessSlug: string } }) {
+    try {
+        const { name } = await request.json();
+        if (!name) return NextResponse.json({ error: "Nombre requerido" }, { status: 400 });
+
+        // Esperar `context.params` para obtener el `businessSlug`
+        const { businessSlug } = await context.params;
+
+        // Obtener el negocio por el `businessSlug`
+        const business = await prisma.business.findUnique({
+            where: { slug: businessSlug },
+        });
+
+        if (!business) {
+            return NextResponse.json({ error: "Negocio no encontrado" }, { status: 404 });
+        }
+
+        // Crear la categoría asociada al negocio
+        const newCategory = await prisma.category.create({
+            data: {
+                name,
+                business: { connect: { id: business.id } }  // Asociar la categoría con el negocio
+            },
+        });
+
+        return NextResponse.json(newCategory, { status: 201 });
+    } catch (error) {
+        console.error("Error al crear categoría:", error);
+        return NextResponse.json({ error: "Error en el servidor" }, { status: 500 });
+    }
+}

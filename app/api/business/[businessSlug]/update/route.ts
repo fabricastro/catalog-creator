@@ -1,8 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server"
 import prisma from "@/app/lib/prisma"
 
-export async function PUT(request: NextRequest, { params }: { params: { businessSlug: string } }) {
+export async function PUT(request: NextRequest, context: { params: { businessSlug: string } }) {
     try {
+        const { businessSlug } = await context.params;
         const { name, description, logoUrl, contact, hours } = await request.json()
 
         // Generar nuevo slug si el nombre cambia
@@ -10,7 +11,7 @@ export async function PUT(request: NextRequest, { params }: { params: { business
 
         // Actualizar los datos del negocio
         const updatedBusiness = await prisma.business.update({
-            where: { slug: params.businessSlug },
+            where: { slug: businessSlug },
             data: {
                 name,
                 slug: newSlug,

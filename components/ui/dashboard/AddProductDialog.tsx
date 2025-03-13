@@ -18,6 +18,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Plus } from "lucide-react"
 import { useParams } from "next/navigation"
+import ImageUploader from "./ImageUploader"
 
 interface Category {
     id: string
@@ -34,6 +35,7 @@ export default function AddProductDialog({ businessName, setBusiness }: AddProdu
     const [categories, setCategories] = useState<Category[]>([])
     const [selectedCategory, setSelectedCategory] = useState("")
     const [isOpen, setIsOpen] = useState(false)
+    const [isSubmitting, setIsSubmitting] = useState(false)
     const params = useParams()
     const businessSlug = params.businessSlug as string
 
@@ -45,7 +47,7 @@ export default function AddProductDialog({ businessName, setBusiness }: AddProdu
                 const data = await res.json()
                 setCategories(data) // Guardar las categorías como { id, name }
             } catch (error) {
-                console.error("❌ Error al obtener categorías:", error)
+                console.error("Error al obtener categorías:", error)
             }
         }
 
@@ -54,16 +56,21 @@ export default function AddProductDialog({ businessName, setBusiness }: AddProdu
         }
     }, [businessSlug, isOpen])
 
+    const handleImageUploaded = (imageUrl: string) => {
+        setNewProduct((prev) => ({ ...prev, imageUrl }))
+    }
+
     const handleAddProduct = async (e: React.FormEvent) => {
         e.preventDefault()
-
-        const newProductData = {
-            ...newProduct,
-            price: Number.parseFloat(newProduct.price), // ✅ Convertir a número
-            categoryId: selectedCategory, // ✅ Enviar el ID de la categoría
-        }
+        setIsSubmitting(true)
 
         try {
+            const newProductData = {
+                ...newProduct,
+                price: Number.parseFloat(newProduct.price),
+                categoryId: selectedCategory || undefined,
+            }
+
             const res = await fetch(`/api/business/${businessName}/add-product`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -82,6 +89,8 @@ export default function AddProductDialog({ businessName, setBusiness }: AddProdu
         } catch (error) {
             console.error("Error al agregar producto:", error)
             alert("Error al agregar el producto. Por favor intenta de nuevo.")
+        } finally {
+            setIsSubmitting(false)
         }
     }
 
@@ -144,20 +153,24 @@ export default function AddProductDialog({ businessName, setBusiness }: AddProdu
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="imageUrl">URL de la imagen</Label>
-                            <Input
-                                id="imageUrl"
-                                value={newProduct.imageUrl}
-                                onChange={(e) => setNewProduct({ ...newProduct, imageUrl: e.target.value })}
-                                placeholder="https://ejemplo.com/imagen.jpg"
-                            />
+                            <Label>Imagen del producto</Label>
+                            <ImageUploader onImageUploaded={handleImageUploaded} />
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+                        <Button type="button" variant="outline" onClick={() => setIsOpen(false)} disabled={isSubmitting}>
                             Cancelar
                         </Button>
-                        <Button type="submit">Guardar producto</Button>
+                        <Button type="submit" disabled={isSubmitting}>
+                            {isSubmitting ? (
+                                <>
+                                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
+                                    Guardando...
+                                </>
+                            ) : (
+                                "Guardar producto"
+                            )}
+                        </Button>
                     </DialogFooter>
                 </form>
             </DialogContent>

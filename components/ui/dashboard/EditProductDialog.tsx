@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Edit } from "lucide-react"
+import ImageUploader from "./ImageUploader"
 
 interface Category {
     id: string
@@ -33,6 +34,7 @@ export default function EditProductDialog({ product, businessName, setBusiness }
     const [editingProduct, setEditingProduct] = useState({ ...product, categoryId: product.categoryId || "" })
     const [categories, setCategories] = useState<Category[]>([])
     const [isOpen, setIsOpen] = useState(false)
+    const [isSubmitting, setIsSubmitting] = useState(false)
 
     // Cargar categorías cuando se abre el modal
     useEffect(() => {
@@ -52,27 +54,41 @@ export default function EditProductDialog({ product, businessName, setBusiness }
         }
     }, [isOpen, businessName])
 
+    const handleImageUploaded = (imageUrl: string) => {
+        setEditingProduct((prev) => ({ ...prev, imageUrl }))
+    }
+
     const handleEditProduct = async (e: React.FormEvent) => {
         e.preventDefault()
-        const updatedProduct = {
-            ...editingProduct,
-            price: Number.parseFloat(editingProduct.price), // ✅ Convertir a número
-        }
+        setIsSubmitting(true)
 
-        const res = await fetch(`/api/business/${businessName}/update-product/${editingProduct.id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(updatedProduct),
-        })
+        try {
+            const updatedProduct = {
+                ...editingProduct,
+                price: Number.parseFloat(editingProduct.price.toString()), // ✅ Convertir a número
+                categoryId: editingProduct.categoryId || null,
+            }
 
-        const data = await res.json()
-        if (res.ok) {
-            setBusiness((prev: any) =>
-                prev ? { ...prev, products: prev.products.map((prod) => (prod.id === data.id ? data : prod)) } : prev,
-            )
-            setIsOpen(false)
-        } else {
-            alert("Error al actualizar el producto: " + data.error)
+            const res = await fetch(`/api/business/${businessName}/update-product/${editingProduct.id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(updatedProduct),
+            })
+
+            const data = await res.json()
+            if (res.ok) {
+                setBusiness((prev: any) =>
+                    prev ? { ...prev, products: prev.products.map((prod) => (prod.id === data.id ? data : prod)) } : prev,
+                )
+                setIsOpen(false)
+            } else {
+                alert("Error al actualizar el producto: " + data.error)
+            }
+        } catch (error) {
+            console.error("Error al actualizar producto:", error)
+            alert("Error al actualizar el producto. Por favor intenta de nuevo.")
+        } finally {
+            setIsSubmitting(false)
         }
     }
 
@@ -115,11 +131,8 @@ export default function EditProductDialog({ product, businessName, setBusiness }
                                 value={editingProduct.categoryId}
                                 onChange={(e) => setEditingProduct({ ...editingProduct, categoryId: e.target.value })}
                                 className="border rounded p-2"
-                                required
                             >
-                                <option value="" disabled>
-                                    Selecciona una categoría
-                                </option>
+                                <option value="">Selecciona una categoría</option>
                                 {categories.map((category) => (
                                     <option key={category.id} value={category.id}>
                                         {category.name}
@@ -138,20 +151,28 @@ export default function EditProductDialog({ product, businessName, setBusiness }
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="edit-imageUrl">URL de la imagen</Label>
-                            <Input
-                                id="edit-imageUrl"
-                                value={editingProduct.imageUrl}
-                                onChange={(e) => setEditingProduct({ ...editingProduct, imageUrl: e.target.value })}
-                                placeholder="https://ejemplo.com/imagen.jpg"
+                            <Label>Imagen del producto</Label>
+                            <ImageUploader
+                                productId={editingProduct.id}
+                                currentImageUrl={editingProduct.imageUrl}
+                                onImageUploaded={handleImageUploaded}
                             />
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+                        <Button type="button" variant="outline" onClick={() => setIsOpen(false)} disabled={isSubmitting}>
                             Cancelar
                         </Button>
-                        <Button type="submit">Actualizar producto</Button>
+                        <Button type="submit" disabled={isSubmitting}>
+                            {isSubmitting ? (
+                                <>
+                                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
+                                    Actualizando...
+                                </>
+                            ) : (
+                                "Actualizar producto"
+                            )}
+                        </Button>
                     </DialogFooter>
                 </form>
             </DialogContent>
