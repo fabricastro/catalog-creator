@@ -332,12 +332,12 @@ export default function BusinessSettings() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  <LogoUploader
-                    businessId={business.id}
-                    businessName={business.name}
-                    currentLogoUrl={formData.logoUrl}
-                    onLogoUploaded={(imageUrl) => setFormData((prev) => ({ ...prev, logoUrl: imageUrl }))}
-                  />
+                <LogoUploader
+                  businessId={business.id}
+                  businessName={business.name}
+                  currentLogoUrl={formData.logoUrl}
+                  onLogoUploaded={(logoUrl) => setFormData({ ...formData, logoUrl })}
+                />
                 </div>
               </CardContent>
             </Card>

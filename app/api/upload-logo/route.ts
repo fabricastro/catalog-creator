@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { ensureImageDirectory, generateImageFilename } from "@/app/lib/server/fileUtils"
+import { ensureLogoDirectory, generateLogoFilename } from "@/app/lib/server/logoUtils"
 import fs from "fs"
 import path from "path"
 import { verify } from "jsonwebtoken"
@@ -27,14 +27,14 @@ export async function POST(request: NextRequest) {
     // Procesar la imagen
     const formData = await request.formData()
     const file = formData.get("file") as File | null
-    const productId = formData.get("productId") as string | null
+    const businessId = formData.get("businessId") as string | null
 
     if (!file) {
       return NextResponse.json({ error: "No se ha proporcionado ningún archivo." }, { status: 400 })
     }
 
-    if (!productId) {
-      return NextResponse.json({ error: "No se ha proporcionado el ID del producto." }, { status: 400 })
+    if (!businessId) {
+      return NextResponse.json({ error: "No se ha proporcionado el ID del negocio." }, { status: 400 })
     }
 
     // Verificar que el archivo sea una imagen
@@ -43,17 +43,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "El archivo debe ser una imagen (JPEG, PNG, WEBP o GIF)." }, { status: 400 })
     }
 
-    // Verificar tamaño máximo (5MB)
-    const maxSize = 5 * 1024 * 1024 // 5MB
+    // Verificar tamaño máximo (2MB para logos)
+    const maxSize = 2 * 1024 * 1024 // 2MB
     if (file.size > maxSize) {
-      return NextResponse.json({ error: "La imagen no debe superar los 5MB." }, { status: 400 })
+      return NextResponse.json({ error: "El logo no debe superar los 2MB." }, { status: 400 })
     }
 
     // Crear directorio si no existe
-    const uploadDir = ensureImageDirectory()
+    const uploadDir = ensureLogoDirectory()
 
     // Generar nombre de archivo único
-    const filename = generateImageFilename(productId, file.name)
+    const filename = generateLogoFilename(businessId, file.name)
 
     // Ruta completa del archivo
     const filePath = path.join(uploadDir, filename)
@@ -66,18 +66,18 @@ export async function POST(request: NextRequest) {
     fs.writeFileSync(filePath, buffer)
 
     // Generar URL relativa para acceder a la imagen
-    const imageUrl = `/uploads/${filename}`
+    const logoUrl = `/uploads/logos/${filename}`
 
     return NextResponse.json(
       {
         success: true,
-        imageUrl,
-        message: "Imagen subida correctamente.",
+        logoUrl,
+        message: "Logo subido correctamente.",
       },
       { status: 200 },
     )
   } catch (error) {
-    console.error("Error al subir imagen:", error)
+    console.error("Error al subir logo:", error)
     return NextResponse.json({ error: "Error en el servidor." }, { status: 500 })
   }
 }

@@ -47,7 +47,7 @@ export default function AddProductDialog({ businessName, setBusiness }: AddProdu
                 const data = await res.json()
                 setCategories(data) // Guardar las categorías como { id, name }
             } catch (error) {
-                console.error("Error al obtener categorías:", error)
+                console.error("❌ Error al obtener categorías:", error)
             }
         }
 
@@ -67,8 +67,8 @@ export default function AddProductDialog({ businessName, setBusiness }: AddProdu
         try {
             const newProductData = {
                 ...newProduct,
-                price: Number.parseFloat(newProduct.price),
-                categoryId: selectedCategory || undefined,
+                price: Number.parseFloat(newProduct.price), // ✅ Convertir a número
+                categoryId: selectedCategory || undefined, // ✅ Enviar el ID de la categoría
             }
 
             const res = await fetch(`/api/business/${businessName}/add-product`, {

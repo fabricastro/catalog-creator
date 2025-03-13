@@ -77,8 +77,8 @@ export default function EditProductDialog({ product, businessName, setBusiness }
 
             const data = await res.json()
             if (res.ok) {
-                setBusiness((prev: any) =>
-                    prev ? { ...prev, products: prev.products.map((prod) => (prod.id === data.id ? data : prod)) } : prev,
+                setBusiness((prev: { products: any[] } | null) =>
+                    prev ? { ...prev, products: prev.products.map((prod: any) => (prod.id === data.id ? data : prod)) } : prev,
                 )
                 setIsOpen(false)
             } else {

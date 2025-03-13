@@ -1,23 +1,21 @@
-import fs from "fs";
-import path from "path";
+import fs from "fs"
+import path from "path"
 
-// 📂 Usar `/tmp/uploads` en lugar de `public/uploads`
+// Función para asegurar que exista el directorio de imágenes
 export function ensureImageDirectory() {
-  const uploadDir = path.join("/tmp", "uploads");
+  const uploadDir = path.join(process.cwd(), "public", "uploads")
 
   if (!fs.existsSync(uploadDir)) {
-    console.log("📂 Creando carpeta de uploads en /tmp...");
-    fs.mkdirSync(uploadDir, { recursive: true });
-  } else {
-    console.log("✅ Carpeta de uploads existente:", uploadDir);
+    fs.mkdirSync(uploadDir, { recursive: true })
   }
 
-  return uploadDir;
+  return uploadDir
 }
 
-// ✅ Genera un nombre de archivo único
-export function generateImageFilename(id: string, type: "product" | "business", originalFilename: string) {
-  const extension = path.extname(originalFilename);
-  const timestamp = Date.now();
-  return `${type}_${id}_${timestamp}${extension}`;
+// Función para generar un nombre de archivo único basado en el ID del producto
+export function generateImageFilename(productId: string, originalFilename: string) {
+  const extension = path.extname(originalFilename)
+  const timestamp = Date.now()
+  return `product_${productId}_${timestamp}${extension}`
 }
+

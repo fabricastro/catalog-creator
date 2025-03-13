@@ -2,13 +2,13 @@
 
 import type React from "react"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef } from "react"
 import { Upload, X, ImageIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 interface LogoUploaderProps {
-  businessId?: string
+  businessId: string
   businessName: string
   currentLogoUrl?: string
   onLogoUploaded: (logoUrl: string) => void
@@ -31,10 +31,10 @@ export default function LogoUploader({ businessId, businessName, currentLogoUrl,
       return
     }
 
-    // Validar tamaño (5MB máximo)
-    const maxSize = 5 * 1024 * 1024
+    // Validar tamaño (2MB máximo para logos)
+    const maxSize = 2 * 1024 * 1024
     if (file.size > maxSize) {
-      setError("La imagen no debe superar los 5MB.")
+      setError("El logo no debe superar los 2MB.")
       return
     }
 
@@ -43,51 +43,41 @@ export default function LogoUploader({ businessId, businessName, currentLogoUrl,
     setPreviewUrl(objectUrl)
     setError(null)
 
-    // Si no hay ID de negocio, solo mostramos la vista previa
-    if (!businessId) {
-      onLogoUploaded(objectUrl)
-      return
-    }
-
-    // Subir la imagen al servidor
-    await uploadLogo(file, businessId)
+    // Subir el logo al servidor
+    await uploadLogo(file)
   }
 
-  const uploadLogo = async (file: File, businessId: string) => {
-    setIsUploading(true);
-    setError(null);
-  
+  const uploadLogo = async (file: File) => {
+    setIsUploading(true)
+    setError(null)
+
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("businessId", businessId); // ✅ Ahora enviamos el ID del negocio
-      formData.append("type", "business");
-  
-      const response = await fetch("/api/upload", {
+      const formData = new FormData()
+      formData.append("file", file)
+      formData.append("businessId", businessId)
+
+      const response = await fetch("/api/upload-logo", {
         method: "POST",
         body: formData,
-      });
-  
-      const data = await response.json();
-  
+      })
+
+      const data = await response.json()
+
       if (!response.ok) {
-        throw new Error(data.error || "Error al subir el logo");
+        throw new Error(data.error || "Error al subir el logo")
       }
-  
-      // Llamar al callback con la URL de la imagen
-      onLogoUploaded(data.imageUrl);
-  
-      // Actualizar la vista previa con la URL
-      setPreviewUrl(data.imageUrl);
+
+      // Llamar al callback con la URL del logo
+      onLogoUploaded(data.logoUrl)
     } catch (error) {
-      console.error("Error al subir logo:", error);
-      setError(error instanceof Error ? error.message : "Error al subir el logo");
-      setPreviewUrl(currentLogoUrl || null);
+      console.error("Error al subir logo:", error)
+      setError(error instanceof Error ? error.message : "Error al subir el logo")
+      // Si hay error, mantenemos el logo anterior si existe
+      setPreviewUrl(currentLogoUrl || null)
     } finally {
-      setIsUploading(false);
+      setIsUploading(false)
     }
-  };
-  
+  }
 
   const handleRemoveLogo = () => {
     setPreviewUrl(null)
