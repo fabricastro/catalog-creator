@@ -43,7 +43,6 @@ next-env.d.ts
 # uploaded images (ignore content but keep folder)
 /public/uploads/*
 !/public/uploads/.gitkeep
-
-# Ignore all files in uploads/logos except .gitkeep
-/uploads/logos/*
-!/uploads/logos/.gitkeep
+!/public/uploads/logos/
+/public/uploads/logos/*
+!/public/uploads/logos/.gitkeep
