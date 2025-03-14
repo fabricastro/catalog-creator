@@ -18,6 +18,7 @@ interface Product {
     description: string
     price: string
     imageUrl: string
+    categories: string
 }
 
 interface Business {
@@ -25,6 +26,8 @@ interface Business {
     description?: string
     logoUrl?: string
     products: Product[]
+    hours?: string
+    contact?: string
 }
 
 export default function Dashboard() {

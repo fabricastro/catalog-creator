@@ -6,11 +6,14 @@ interface Business {
     id: string;
     name: string;
     logoUrl?: string;
+    description?: string;
+    hours?: string;
+    contact?: string;
 }
 
 interface BusinessContextProps {
     business: Business | null;
-    setBusiness: (business: Business) => void; // Permite actualizar el negocio
+    setBusiness: (business: Business) => void;
 }
 
 const BusinessContext = createContext<BusinessContextProps | undefined>(undefined);

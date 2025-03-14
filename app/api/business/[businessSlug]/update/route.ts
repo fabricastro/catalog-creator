@@ -4,12 +4,19 @@ import prisma from "@/app/lib/prisma"
 export async function PUT(request: NextRequest, context: { params: { businessSlug: string } }) {
     try {
         const { businessSlug } = await context.params;
-        const { name, description, logoUrl, contact, hours } = await request.json()
+        const { name, description, logoUrl, contact, hours } = await request.json();
 
-        // Generar nuevo slug si el nombre cambia
-        const newSlug = name.toLowerCase().replace(/\s+/g, "-")
+        // Generar nuevo slug asegurando que no se repita
+        let newSlug = name.toLowerCase().replace(/\s+/g, "-");
+        let existingBusiness = await prisma.business.findUnique({ where: { slug: newSlug } });
 
-        // Actualizar los datos del negocio
+        let counter = 1;
+        while (existingBusiness && existingBusiness.slug !== businessSlug) {
+            newSlug = `${newSlug}-${counter}`;
+            existingBusiness = await prisma.business.findUnique({ where: { slug: newSlug } });
+            counter++;
+        }
+
         const updatedBusiness = await prisma.business.update({
             where: { slug: businessSlug },
             data: {
@@ -20,12 +27,12 @@ export async function PUT(request: NextRequest, context: { params: { businessSlu
                 contact,
                 hours,
             },
-        })
+        });
 
-        return NextResponse.json(updatedBusiness, { status: 200 })
+        return NextResponse.json(updatedBusiness, { status: 200 });
     } catch (error) {
-        console.error("Error al actualizar negocio:", error)
-        return NextResponse.json({ error: "Error en el servidor" }, { status: 500 })
+        console.error("❌ Error al actualizar negocio:", error);
+        return NextResponse.json({ error: "Error en el servidor" }, { status: 500 });
     }
 }
 

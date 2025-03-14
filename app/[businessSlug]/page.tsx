@@ -433,7 +433,7 @@ Total: $${getCartTotal()}`
                                             alt={product.name}
                                             width={400}
                                             height={300}
-                                            crop="fit"
+                                            crop="fill"
                                             className="h-full w-full object-cover"
                                         />
                                     ) : (

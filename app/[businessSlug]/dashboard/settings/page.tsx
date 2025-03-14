@@ -17,7 +17,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { toast } from "sonner"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import LogoUploader from "@/components/ui/dashboard/LogoUploader"
-import { useBusiness }  from "@/app/context/BusinessContext"
+import { useBusiness } from "@/app/context/BusinessContext"
 
 interface Business {
   id: string
@@ -34,7 +34,7 @@ export default function BusinessSettings() {
   const params = useParams()
   const router = useRouter()
   const businessSlug = params?.businessSlug ? decodeURIComponent(params.businessSlug as string) : null
-  const { business, setBusiness } = useBusiness();
+  const { business, setBusiness } = useBusiness()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [formData, setFormData] = useState({
@@ -71,8 +71,7 @@ export default function BusinessSettings() {
         })
       } catch (error) {
         console.error("❌ Error fetching business data:", error)
-        toast({
-          title: "Error",
+        toast.succes("error", {
           description: "No se pudo cargar la información del negocio",
           variant: "destructive",
         })
@@ -110,9 +109,9 @@ export default function BusinessSettings() {
   }
 
   const handleLogoUploaded = (logoUrl: string) => {
-    setFormData((prev) => ({ ...prev, logoUrl }));
-    setBusiness({ ...business!, logoUrl }); // ✅ Actualiza el estado global
-  };
+    setFormData((prev) => ({ ...prev, logoUrl }))
+    setBusiness({ ...business!, logoUrl }) // ✅ Actualiza el estado global
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -136,7 +135,21 @@ export default function BusinessSettings() {
       })
 
       if (res.ok) {
-        toast.success("Cambios guardados",{
+        const updatedBusiness = await res.json()
+
+        // Check if the slug has changed and redirect if needed
+        if (updatedBusiness.slug && updatedBusiness.slug !== businessSlug) {
+          toast.success("Cambios guardados", {
+            description: "La información de tu negocio ha sido actualizada correctamente",
+            duration: 3000,
+          })
+
+          // Redirect to the new slug URL
+          router.push(`/${updatedBusiness.slug}/dashboard/settings`)
+          return
+        }
+
+        toast.success("Cambios guardados", {
           description: "La información de tu negocio ha sido actualizada correctamente",
           duration: 3000,
         })
@@ -225,7 +238,7 @@ export default function BusinessSettings() {
                   <CardDescription>Actualiza la información básica de tu negocio</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
+                  <div className="space-y-2 mb-2">
                     <Label htmlFor="name">Nombre del negocio</Label>
                     <Input
                       id="name"
@@ -238,7 +251,7 @@ export default function BusinessSettings() {
                     {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-2 mb-2">
                     <Label htmlFor="description">Descripción</Label>
                     <Textarea
                       id="description"
@@ -260,7 +273,6 @@ export default function BusinessSettings() {
                                             placeholder="Calle Ejemplo 123, Ciudad"
                                         />
                                     </div> */}
-
                 </CardContent>
               </Card>
 
@@ -332,7 +344,11 @@ export default function BusinessSettings() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                <LogoUploader businessId={business!.id} currentLogoUrl={formData.logoUrl} onLogoUploaded={handleLogoUploaded} />
+                  <LogoUploader
+                    businessId={business!.id}
+                    currentLogoUrl={formData.logoUrl}
+                    onLogoUploaded={handleLogoUploaded}
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -382,8 +398,8 @@ export default function BusinessSettings() {
                     <Info className="h-4 w-4" />
                     <AlertTitle>Importante</AlertTitle>
                     <AlertDescription>
-                      Asegúrate de que tu número de WhatsApp esté activo y pueda recibir mensajes. Los clientes utilizarán
-                      este número para realizar sus pedidos.
+                      Asegúrate de que tu número de WhatsApp esté activo y pueda recibir mensajes. Los clientes
+                      utilizarán este número para realizar sus pedidos.
                     </AlertDescription>
                   </Alert>
                 </div>
@@ -407,7 +423,6 @@ export default function BusinessSettings() {
           </Button>
         </div>
       </Tabs>
-
     </div>
   )
 }
