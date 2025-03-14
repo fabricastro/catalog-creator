@@ -1,106 +1,93 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Package, Search, Plus, Edit, Trash2 } from "lucide-react";
-import Image from "next/image";
-import AddProductDialog from "@/components/ui/dashboard/AddProductDialog";
-import EditProductDialog from "@/components/ui/dashboard/EditProductDialog";
-import AddCategoryDialog from "@/components/ui/dashboard/AddCategoryDialog"; // Agregado
+import { useEffect, useState } from "react"
+import { useRouter, useParams } from "next/navigation"
+import { Input } from "@/components/ui/input"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Package, Search } from "lucide-react"
+import AddProductDialog from "@/components/ui/dashboard/AddProductDialog"
+import EditProductDialog from "@/components/ui/dashboard/EditProductDialog"
+import AddCategoryDialog from "@/components/ui/dashboard/AddCategoryDialog"
+import CloudinaryImage from "@/components/ui/CloudinaryImage"
+import DeleteProductDialog from "@/components/ui/dashboard/DeleteProductDialog"
 
 interface Product {
-    id: string;
-    name: string;
-    description: string;
-    price: string;
-    imageUrl: string;
+    id: string
+    name: string
+    description: string
+    price: string
+    imageUrl: string
 }
 
 interface Business {
-    name: string;
-    description?: string;
-    logoUrl?: string;
-    products: Product[];
+    name: string
+    description?: string
+    logoUrl?: string
+    products: Product[]
 }
 
 export default function Dashboard() {
-    const params = useParams();
-    const businessSlug = params.businessSlug as string;
-    const [business, setBusiness] = useState<Business | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [searchQuery, setSearchQuery] = useState("");
-    const [error, setError] = useState<string | null>(null);
-    const [categories, setCategories] = useState<string[]>([]); // Agregado
-    const router = useRouter();
+    const params = useParams()
+    const businessSlug = params.businessSlug as string
+    const [business, setBusiness] = useState<Business | null>(null)
+    const [loading, setLoading] = useState(true)
+    const [searchQuery, setSearchQuery] = useState("")
+    const [error, setError] = useState<string | null>(null)
+    const [categories, setCategories] = useState<string[]>([])
+    const router = useRouter()
 
     useEffect(() => {
         if (!businessSlug) {
-            console.error("🚨 Error: businessSlug está vacío o indefinido");
-            return;
+            console.error("🚨 Error: businessSlug está vacío o indefinido")
+            return
         }
 
         const fetchBusiness = async () => {
             try {
-                setLoading(true);
-                setError(null);
-                const res = await fetch(`/api/business/${encodeURIComponent(businessSlug)}`);
+                console.log("🔍 Fetching business:", businessSlug)
+                setLoading(true)
+                setError(null)
+                const res = await fetch(`/api/business/${encodeURIComponent(businessSlug)}`)
 
-                if (!res.ok) throw new Error(`Error ${res.status}: No se pudo obtener el negocio`);
+                console.log("📥 API Response:", res.status)
 
-                const data = await res.json();
+                if (!res.ok) throw new Error(`Error ${res.status}: No se pudo obtener el negocio`)
 
-                setBusiness(data);
+                const data = await res.json()
+                console.log("✅ Business Data:", data)
+
+                setBusiness(data)
             } catch (error: any) {
-                setError(error.message);
-                setBusiness(null);
+                console.error("❌ Error fetching business data:", error)
+                setError(error.message)
+                setBusiness(null)
             } finally {
-                setLoading(false);
+                setLoading(false)
             }
-        };
+        }
 
         const fetchCategories = async () => {
             try {
-                const res = await fetch(`/api/business/${encodeURIComponent(businessSlug)}/categories`);
-                if (!res.ok) throw new Error("Error al obtener categorías");
-                const data = await res.json();
-                setCategories(data.map((category: { name: string }) => category.name));
+                const res = await fetch(`/api/business/${encodeURIComponent(businessSlug)}/categories`)
+                if (!res.ok) throw new Error("Error al obtener categorías")
+                const data = await res.json()
+                setCategories(data.map((category: { name: string }) => category.name))
             } catch (error) {
-                console.error("❌ Error al obtener categorías:", error);
+                console.error("❌ Error al obtener categorías:", error)
             }
-        };
-
-        fetchBusiness();
-        fetchCategories();
-    }, [businessSlug]);
-
-    const handleDeleteProduct = async (productId: string) => {
-        if (!confirm("¿Seguro que deseas eliminar este producto?")) return;
-        try {
-            const res = await fetch(`/api/business/${encodeURIComponent(businessSlug)}/delete-product/${productId}`, {
-                method: "DELETE",
-            });
-            if (!res.ok) throw new Error("Error al eliminar el producto.");
-            setBusiness((prev) =>
-                prev ? {
-                    ...prev,
-                    products: prev.products.filter((prod) => prod.id !== productId),
-                } : prev
-            );
-        } catch (error: any) {
-            alert(error.message);
         }
-    };
+
+        fetchBusiness()
+        fetchCategories()
+    }, [businessSlug])
 
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
                 <p className="text-muted-foreground">Cargando...</p>
             </div>
-        );
+        )
     }
 
     if (error) {
@@ -108,16 +95,16 @@ export default function Dashboard() {
             <div className="flex items-center justify-center min-h-screen">
                 <p className="text-red-500">{error}</p>
             </div>
-        );
+        )
     }
 
-    if (!business) return null;
+    if (!business) return null
 
     const filteredProducts = business.products.filter(
         (product) =>
             product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            product.description.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+            product.description.toLowerCase().includes(searchQuery.toLowerCase()),
+    )
 
     return (
         <div className="container py-6 md:py-8">
@@ -135,7 +122,7 @@ export default function Dashboard() {
             <Tabs defaultValue="products">
                 <TabsList className="mb-6">
                     <TabsTrigger value="products">Productos</TabsTrigger>
-                    <TabsTrigger value="catalogs">Catálogos</TabsTrigger>
+                    {/* <TabsTrigger value="catalogs">Catálogos</TabsTrigger> */}
                 </TabsList>
                 <TabsContent value="products">
                     <div className="relative mb-6">
@@ -152,14 +139,15 @@ export default function Dashboard() {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {filteredProducts.map((product) => (
                                 <Card key={product.id} className="overflow-hidden">
-                                    <div className="aspect-video relative bg-muted">
+                                    <div className="aspect-video relative bg-muted mx-4 rounded-lg">
                                         {product.imageUrl ? (
-                                            <Image
-                                                src={product.imageUrl || "/placeholder.svg"}
+                                            <CloudinaryImage
+                                                src={product.imageUrl}
                                                 alt={product.name}
-                                                fill
-                                                className="object-cover"
-                                                unoptimized
+                                                width={600}
+                                                height={400}
+                                                crop="fill"
+                                                className="h-full w-full object-contain"
                                             />
                                         ) : (
                                             <div className="flex items-center justify-center h-full text-muted-foreground">
@@ -178,14 +166,19 @@ export default function Dashboard() {
                                     </CardContent>
                                     <CardFooter className="p-4 pt-0 flex justify-between">
                                         <EditProductDialog product={product} businessName={businessSlug} setBusiness={setBusiness} />
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="text-destructive hover:bg-destructive/10"
-                                            onClick={() => handleDeleteProduct(product.id)}
-                                        >
-                                            <Trash2 className="h-4 w-4 mr-1" /> Eliminar
-                                        </Button>
+                                        <DeleteProductDialog
+                                            product={product}
+                                            onProductDeleted={(productId) => {
+                                                setBusiness((prev) =>
+                                                    prev
+                                                        ? {
+                                                            ...prev,
+                                                            products: prev.products.filter((prod) => prod.id !== productId),
+                                                        }
+                                                        : prev,
+                                                )
+                                            }}
+                                        />
                                     </CardFooter>
                                 </Card>
                             ))}
@@ -196,5 +189,6 @@ export default function Dashboard() {
                 </TabsContent>
             </Tabs>
         </div>
-    );
+    )
 }
+

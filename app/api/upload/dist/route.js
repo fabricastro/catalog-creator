@@ -38,71 +38,58 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 exports.__esModule = true;
 exports.POST = void 0;
 var server_1 = require("next/server");
-var fileUtils_1 = require("@/app/lib/server/fileUtils");
-var fs_1 = require("fs");
-var path_1 = require("path");
-var jsonwebtoken_1 = require("jsonwebtoken");
-var headers_1 = require("next/headers");
-var SECRET_KEY = process.env.JWT_SECRET || "supersecreto";
+var cloudinary_1 = require("cloudinary");
+cloudinary_1.v2.config({
+    cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
 function POST(request) {
     return __awaiter(this, void 0, void 0, function () {
-        var cookieStore, tokenCookie, formData, file, productId, validTypes, maxSize, uploadDir, filename, filePath, arrayBuffer, buffer, imageUrl, error_1;
+        var formData, file, id_1, type_1, arrayBuffer, buffer_1, folder_1, result, error_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     _a.trys.push([0, 4, , 5]);
-                    return [4 /*yield*/, headers_1.cookies()];
-                case 1:
-                    cookieStore = _a.sent();
-                    tokenCookie = cookieStore.get("token");
-                    if (!tokenCookie) {
-                        return [2 /*return*/, server_1.NextResponse.json({ error: "No autorizado." }, { status: 401 })];
-                    }
-                    // Verificar que el token sea válido
-                    try {
-                        jsonwebtoken_1.verify(tokenCookie.value, SECRET_KEY);
-                    }
-                    catch (error) {
-                        return [2 /*return*/, server_1.NextResponse.json({ error: "Token inválido o expirado." }, { status: 401 })];
-                    }
                     return [4 /*yield*/, request.formData()];
-                case 2:
+                case 1:
                     formData = _a.sent();
                     file = formData.get("file");
-                    productId = formData.get("productId");
+                    id_1 = formData.get("id");
+                    type_1 = formData.get("type");
                     if (!file) {
                         return [2 /*return*/, server_1.NextResponse.json({ error: "No se ha proporcionado ningún archivo." }, { status: 400 })];
                     }
-                    if (!productId) {
-                        return [2 /*return*/, server_1.NextResponse.json({ error: "No se ha proporcionado el ID del producto." }, { status: 400 })];
+                    if (!id_1) {
+                        return [2 /*return*/, server_1.NextResponse.json({ error: "No se ha proporcionado el ID del producto o negocio." }, { status: 400 })];
                     }
-                    validTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-                    if (!validTypes.includes(file.type)) {
-                        return [2 /*return*/, server_1.NextResponse.json({ error: "El archivo debe ser una imagen (JPEG, PNG, WEBP o GIF)." }, { status: 400 })];
+                    if (!type_1 || (type_1 !== "product" && type_1 !== "business")) {
+                        return [2 /*return*/, server_1.NextResponse.json({ error: "Tipo de imagen no válido." }, { status: 400 })];
                     }
-                    maxSize = 5 * 1024 * 1024 // 5MB
-                    ;
-                    if (file.size > maxSize) {
-                        return [2 /*return*/, server_1.NextResponse.json({ error: "La imagen no debe superar los 5MB." }, { status: 400 })];
-                    }
-                    uploadDir = fileUtils_1.ensureImageDirectory();
-                    filename = fileUtils_1.generateImageFilename(productId, file.name);
-                    filePath = path_1["default"].join(uploadDir, filename);
                     return [4 /*yield*/, file.arrayBuffer()];
-                case 3:
+                case 2:
                     arrayBuffer = _a.sent();
-                    buffer = Buffer.from(arrayBuffer);
-                    // Guardar el archivo
-                    fs_1["default"].writeFileSync(filePath, buffer);
-                    imageUrl = "/uploads/" + filename;
-                    return [2 /*return*/, server_1.NextResponse.json({
-                            success: true,
-                            imageUrl: imageUrl,
-                            message: "Imagen subida correctamente."
-                        }, { status: 200 })];
+                    buffer_1 = Buffer.from(arrayBuffer);
+                    folder_1 = type_1 === "product" ? "products" : "businesses";
+                    return [4 /*yield*/, new Promise(function (resolve, reject) {
+                            cloudinary_1.v2.uploader.upload_stream({
+                                folder: folder_1,
+                                public_id: type_1 + "_" + id_1 + "_" + Date.now(),
+                                resource_type: "image",
+                                transformation: [{ width: 800, height: 600, crop: "fit" }]
+                            }, function (error, result) {
+                                if (error)
+                                    reject(error);
+                                else
+                                    resolve(result);
+                            }).end(buffer_1);
+                        })];
+                case 3:
+                    result = _a.sent();
+                    return [2 /*return*/, server_1.NextResponse.json({ success: true, imageUrl: result.secure_url }, { status: 200 })];
                 case 4:
                     error_1 = _a.sent();
-                    console.error("Error al subir imagen:", error_1);
+                    console.error("❌ Error al subir imagen:", error_1);
                     return [2 /*return*/, server_1.NextResponse.json({ error: "Error en el servidor." }, { status: 500 })];
                 case 5: return [2 /*return*/];
             }

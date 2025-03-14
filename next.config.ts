@@ -10,6 +10,12 @@ const nextConfig: NextConfig = {
     // This will allow the build to succeed even with ESLint errors
     ignoreDuringBuilds: true,
   },
+  images: {
+    domains: ["res.cloudinary.com"],
+  },
+  env: {
+    NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
+  },
 }
 
 export default nextConfig

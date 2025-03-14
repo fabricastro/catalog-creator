@@ -14,9 +14,10 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import LogoUploader from "@/components/ui/dashboard/LogoUploader"
+import { useBusiness }  from "@/app/context/BusinessContext"
 
 interface Business {
   id: string
@@ -32,10 +33,8 @@ interface Business {
 export default function BusinessSettings() {
   const params = useParams()
   const router = useRouter()
-  const { toast } = useToast()
   const businessSlug = params?.businessSlug ? decodeURIComponent(params.businessSlug as string) : null
-
-  const [business, setBusiness] = useState<Business | null>(null)
+  const { business, setBusiness } = useBusiness();
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [formData, setFormData] = useState({
@@ -111,8 +110,9 @@ export default function BusinessSettings() {
   }
 
   const handleLogoUploaded = (logoUrl: string) => {
-    setFormData((prev) => ({ ...prev, logoUrl }))
-  }
+    setFormData((prev) => ({ ...prev, logoUrl }));
+    setBusiness({ ...business!, logoUrl }); // ✅ Actualiza el estado global
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -136,9 +136,9 @@ export default function BusinessSettings() {
       })
 
       if (res.ok) {
-        toast({
-          title: "Cambios guardados",
+        toast.success("Cambios guardados",{
           description: "La información de tu negocio ha sido actualizada correctamente",
+          duration: 3000,
         })
 
         // Update local business state
@@ -332,12 +332,7 @@ export default function BusinessSettings() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                <LogoUploader
-                  businessId={business.id}
-                  businessName={business.name}
-                  currentLogoUrl={formData.logoUrl}
-                  onLogoUploaded={(logoUrl) => setFormData({ ...formData, logoUrl })}
-                />
+                <LogoUploader businessId={business!.id} currentLogoUrl={formData.logoUrl} onLogoUploaded={handleLogoUploaded} />
                 </div>
               </CardContent>
             </Card>

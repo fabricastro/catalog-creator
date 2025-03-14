@@ -40,16 +40,16 @@ exports.__esModule = true;
 var react_1 = require("react");
 var lucide_react_1 = require("lucide-react");
 var button_1 = require("@/components/ui/button");
-var avatar_1 = require("@/components/ui/avatar");
+var CloudinaryImage_1 = require("@/components/ui/CloudinaryImage");
 function LogoUploader(_a) {
     var _this = this;
-    var businessId = _a.businessId, businessName = _a.businessName, currentLogoUrl = _a.currentLogoUrl, onLogoUploaded = _a.onLogoUploaded;
+    var businessId = _a.businessId, currentLogoUrl = _a.currentLogoUrl, onLogoUploaded = _a.onLogoUploaded;
     var _b = react_1.useState(false), isUploading = _b[0], setIsUploading = _b[1];
     var _c = react_1.useState(currentLogoUrl || null), previewUrl = _c[0], setPreviewUrl = _c[1];
     var _d = react_1.useState(null), error = _d[0], setError = _d[1];
     var fileInputRef = react_1.useRef(null);
     var handleFileChange = function (e) { return __awaiter(_this, void 0, void 0, function () {
-        var file, validTypes, maxSize, objectUrl;
+        var file, validTypes, objectUrl;
         var _a;
         return __generator(this, function (_b) {
             switch (_b.label) {
@@ -59,21 +59,20 @@ function LogoUploader(_a) {
                         return [2 /*return*/];
                     validTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
                     if (!validTypes.includes(file.type)) {
-                        setError("Por favor selecciona una imagen (JPEG, PNG, WEBP o GIF).");
+                        setError("Formato no válido (JPEG, PNG, WEBP o GIF).");
                         return [2 /*return*/];
                     }
-                    maxSize = 2 * 1024 * 1024;
-                    if (file.size > maxSize) {
-                        setError("El logo no debe superar los 2MB.");
+                    if (file.size > 5 * 1024 * 1024) {
+                        setError("La imagen no debe superar los 5MB.");
                         return [2 /*return*/];
                     }
                     objectUrl = URL.createObjectURL(file);
                     setPreviewUrl(objectUrl);
                     setError(null);
-                    // Subir el logo al servidor
+                    // Subir imagen
                     return [4 /*yield*/, uploadLogo(file)];
                 case 1:
-                    // Subir el logo al servidor
+                    // Subir imagen
                     _b.sent();
                     return [2 /*return*/];
             }
@@ -91,27 +90,23 @@ function LogoUploader(_a) {
                     _a.trys.push([1, 4, 5, 6]);
                     formData = new FormData();
                     formData.append("file", file);
-                    formData.append("businessId", businessId);
-                    return [4 /*yield*/, fetch("/api/upload-logo", {
-                            method: "POST",
-                            body: formData
-                        })];
+                    formData.append("id", businessId);
+                    formData.append("type", "business"); // ✅ Especificar que es un logo de negocio
+                    return [4 /*yield*/, fetch("/api/upload", { method: "POST", body: formData })];
                 case 2:
                     response = _a.sent();
                     return [4 /*yield*/, response.json()];
                 case 3:
                     data = _a.sent();
-                    if (!response.ok) {
+                    if (!response.ok)
                         throw new Error(data.error || "Error al subir el logo");
-                    }
-                    // Llamar al callback con la URL del logo
-                    onLogoUploaded(data.logoUrl);
+                    onLogoUploaded(data.imageUrl);
+                    setPreviewUrl(data.imageUrl); // ✅ Guardamos la URL de Cloudinary
                     return [3 /*break*/, 6];
                 case 4:
                     error_1 = _a.sent();
                     console.error("Error al subir logo:", error_1);
-                    setError(error_1 instanceof Error ? error_1.message : "Error al subir el logo");
-                    // Si hay error, mantenemos el logo anterior si existe
+                    setError("Error al subir el logo");
                     setPreviewUrl(currentLogoUrl || null);
                     return [3 /*break*/, 6];
                 case 5:
@@ -123,33 +118,17 @@ function LogoUploader(_a) {
     }); };
     var handleRemoveLogo = function () {
         setPreviewUrl(null);
-        if (fileInputRef.current) {
-            fileInputRef.current.value = "";
-        }
+        fileInputRef.current && (fileInputRef.current.value = "");
         onLogoUploaded("");
     };
-    var triggerFileInput = function () {
-        var _a;
-        (_a = fileInputRef.current) === null || _a === void 0 ? void 0 : _a.click();
-    };
     return (React.createElement("div", { className: "space-y-4" },
-        React.createElement("input", { type: "file", ref: fileInputRef, onChange: handleFileChange, accept: "image/jpeg,image/png,image/webp,image/gif", className: "hidden" }),
-        React.createElement("div", { className: "flex items-center gap-4" },
-            previewUrl ? (React.createElement("div", { className: "relative" },
-                React.createElement(avatar_1.Avatar, { className: "h-24 w-24 border" },
-                    React.createElement(avatar_1.AvatarImage, { src: previewUrl, alt: businessName }),
-                    React.createElement(avatar_1.AvatarFallback, { className: "text-2xl" }, businessName.charAt(0))),
-                React.createElement(button_1.Button, { variant: "destructive", size: "icon", className: "absolute -top-2 -right-2 h-6 w-6 rounded-full opacity-90", onClick: handleRemoveLogo },
-                    React.createElement(lucide_react_1.X, { className: "h-3 w-3" })))) : (React.createElement("div", { onClick: triggerFileInput, className: "flex h-24 w-24 cursor-pointer flex-col items-center justify-center rounded-full border border-dashed border-border bg-muted/50 hover:bg-muted" },
-                React.createElement(lucide_react_1.ImageIcon, { className: "h-8 w-8 text-muted-foreground" }))),
-            React.createElement("div", { className: "flex-1" },
-                React.createElement("h3", { className: "text-sm font-medium" }, "Logo del negocio"),
-                React.createElement("p", { className: "text-xs text-muted-foreground mt-1" }, "Sube una imagen para tu negocio. Se recomienda una imagen cuadrada de al menos 200x200 p\u00EDxeles."),
-                error && React.createElement("p", { className: "text-xs text-destructive mt-1" }, error))),
-        React.createElement(button_1.Button, { type: "button", variant: "outline", size: "sm", className: "w-full", onClick: triggerFileInput, disabled: isUploading }, isUploading ? (React.createElement(React.Fragment, null,
-            React.createElement("div", { className: "mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" }),
-            "Subiendo...")) : (React.createElement(React.Fragment, null,
-            React.createElement(lucide_react_1.Upload, { className: "mr-2 h-4 w-4" }),
-            previewUrl ? "Cambiar logo" : "Subir logo")))));
+        React.createElement("input", { type: "file", ref: fileInputRef, onChange: handleFileChange, accept: "image/*", className: "hidden" }),
+        React.createElement("div", { className: "flex items-center justify-center gap-4" }, previewUrl ? (React.createElement("div", { className: "relative" },
+            React.createElement(CloudinaryImage_1["default"], { src: previewUrl, alt: "Logo", width: 200, height: 200, className: "h-24 w-24 border p-4" }),
+            React.createElement(button_1.Button, { variant: "destructive", size: "icon", className: "absolute -top-2 -right-2 h-6 w-6", onClick: handleRemoveLogo },
+                React.createElement(lucide_react_1.X, { className: "h-3 w-3" })))) : (React.createElement("div", { onClick: function () { var _a; return (_a = fileInputRef.current) === null || _a === void 0 ? void 0 : _a.click(); }, className: "cursor-pointer flex h-24 w-24 items-center justify-center rounded-full border border-dashed bg-muted/50 hover:bg-muted" },
+            React.createElement(lucide_react_1.ImageIcon, { className: "h-8 w-8 text-muted-foreground" })))),
+        React.createElement(button_1.Button, { type: "button", variant: "outline", size: "sm", className: "w-full", onClick: function () { var _a; return (_a = fileInputRef.current) === null || _a === void 0 ? void 0 : _a.click(); }, disabled: isUploading }, isUploading ? "Subiendo..." : "Subir logo"),
+        error && React.createElement("p", { className: "text-sm text-destructive" }, error)));
 }
 exports["default"] = LogoUploader;

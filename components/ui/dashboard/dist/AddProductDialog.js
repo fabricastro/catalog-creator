@@ -64,6 +64,7 @@ var label_1 = require("@/components/ui/label");
 var lucide_react_1 = require("lucide-react");
 var navigation_1 = require("next/navigation");
 var ImageUploader_1 = require("./ImageUploader");
+var sonner_1 = require("sonner");
 function AddProductDialog(_a) {
     var _this = this;
     var businessName = _a.businessName, setBusiness = _a.setBusiness;
@@ -94,6 +95,11 @@ function AddProductDialog(_a) {
                     case 3:
                         error_1 = _a.sent();
                         console.error("❌ Error al obtener categorías:", error_1);
+                        sonner_1.toast.error("Error al cargar categorías", {
+                            description: "No se pudieron cargar las categorías. Intenta nuevamente.",
+                            position: "top-center",
+                            duration: 3000
+                        });
                         return [3 /*break*/, 4];
                     case 4: return [2 /*return*/];
                 }
@@ -132,15 +138,29 @@ function AddProductDialog(_a) {
                         setNewProduct({ name: "", description: "", price: "", imageUrl: "" });
                         setSelectedCategory("");
                         setIsOpen(false);
+                        // Mostrar toast de éxito
+                        sonner_1.toast.success("Producto agregado", {
+                            description: newProduct.name + " ha sido agregado al cat\u00E1logo.",
+                            position: "top-center",
+                            duration: 3000
+                        });
                     }
                     else {
-                        alert("Error al agregar el producto: " + data_1.error);
+                        sonner_1.toast.error("Error al agregar producto", {
+                            description: data_1.error || "Ocurrió un error al agregar el producto.",
+                            position: "top-center",
+                            duration: 4000
+                        });
                     }
                     return [3 /*break*/, 6];
                 case 4:
                     error_2 = _a.sent();
                     console.error("Error al agregar producto:", error_2);
-                    alert("Error al agregar el producto. Por favor intenta de nuevo.");
+                    sonner_1.toast.error("Error al agregar producto", {
+                        description: "Ocurrió un error inesperado. Por favor intenta de nuevo.",
+                        position: "top-center",
+                        duration: 4000
+                    });
                     return [3 /*break*/, 6];
                 case 5:
                     setIsSubmitting(false);
@@ -149,38 +169,38 @@ function AddProductDialog(_a) {
             }
         });
     }); };
-    return (React.createElement(dialog_1.Dialog, { open: isOpen, onOpenChange: setIsOpen },
-        React.createElement(dialog_1.DialogTrigger, { asChild: true },
-            React.createElement(button_1.Button, null,
-                React.createElement(lucide_react_1.Plus, { className: "mr-2 h-4 w-4" }),
+    return (react_2["default"].createElement(dialog_1.Dialog, { open: isOpen, onOpenChange: setIsOpen },
+        react_2["default"].createElement(dialog_1.DialogTrigger, { asChild: true },
+            react_2["default"].createElement(button_1.Button, null,
+                react_2["default"].createElement(lucide_react_1.Plus, { className: "mr-2 h-4 w-4" }),
                 " Agregar producto")),
-        React.createElement(dialog_1.DialogContent, { className: "sm:max-w-[500px]" },
-            React.createElement(dialog_1.DialogHeader, null,
-                React.createElement(dialog_1.DialogTitle, null, "Agregar nuevo producto"),
-                React.createElement(dialog_1.DialogDescription, null, "Completa los detalles del producto para agregarlo a tu cat\u00E1logo.")),
-            React.createElement("form", { onSubmit: handleAddProduct },
-                React.createElement("div", { className: "grid gap-4 py-4" },
-                    React.createElement("div", { className: "grid gap-2" },
-                        React.createElement(label_1.Label, { htmlFor: "name" }, "Nombre"),
-                        React.createElement(input_1.Input, { id: "name", value: newProduct.name, onChange: function (e) { return setNewProduct(__assign(__assign({}, newProduct), { name: e.target.value })); }, required: true })),
-                    React.createElement("div", { className: "grid gap-2" },
-                        React.createElement(label_1.Label, { htmlFor: "description" }, "Descripci\u00F3n"),
-                        React.createElement(textarea_1.Textarea, { id: "description", value: newProduct.description, onChange: function (e) { return setNewProduct(__assign(__assign({}, newProduct), { description: e.target.value })); }, rows: 3 })),
-                    React.createElement("div", { className: "grid gap-2" },
-                        React.createElement(label_1.Label, { htmlFor: "category" }, "Categor\u00EDa"),
-                        React.createElement("select", { id: "category", value: selectedCategory, onChange: function (e) { return setSelectedCategory(e.target.value); }, className: "border rounded p-2" },
-                            React.createElement("option", { value: "" }, "Selecciona una categor\u00EDa"),
-                            categories.map(function (category) { return (React.createElement("option", { key: category.id, value: category.id }, category.name)); }))),
-                    React.createElement("div", { className: "grid gap-2" },
-                        React.createElement(label_1.Label, { htmlFor: "price" }, "Precio"),
-                        React.createElement(input_1.Input, { id: "price", type: "number", value: newProduct.price, onChange: function (e) { return setNewProduct(__assign(__assign({}, newProduct), { price: e.target.value })); }, required: true })),
-                    React.createElement("div", { className: "grid gap-2" },
-                        React.createElement(label_1.Label, null, "Imagen del producto"),
-                        React.createElement(ImageUploader_1["default"], { onImageUploaded: handleImageUploaded }))),
-                React.createElement(dialog_1.DialogFooter, null,
-                    React.createElement(button_1.Button, { type: "button", variant: "outline", onClick: function () { return setIsOpen(false); }, disabled: isSubmitting }, "Cancelar"),
-                    React.createElement(button_1.Button, { type: "submit", disabled: isSubmitting }, isSubmitting ? (React.createElement(React.Fragment, null,
-                        React.createElement("div", { className: "mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" }),
+        react_2["default"].createElement(dialog_1.DialogContent, { className: "sm:max-w-[500px]" },
+            react_2["default"].createElement(dialog_1.DialogHeader, null,
+                react_2["default"].createElement(dialog_1.DialogTitle, null, "Agregar nuevo producto"),
+                react_2["default"].createElement(dialog_1.DialogDescription, null, "Completa los detalles del producto para agregarlo a tu cat\u00E1logo.")),
+            react_2["default"].createElement("form", { onSubmit: handleAddProduct },
+                react_2["default"].createElement("div", { className: "grid gap-4 py-4" },
+                    react_2["default"].createElement("div", { className: "grid gap-2" },
+                        react_2["default"].createElement(label_1.Label, { htmlFor: "name" }, "Nombre"),
+                        react_2["default"].createElement(input_1.Input, { id: "name", value: newProduct.name, onChange: function (e) { return setNewProduct(__assign(__assign({}, newProduct), { name: e.target.value })); }, required: true })),
+                    react_2["default"].createElement("div", { className: "grid gap-2" },
+                        react_2["default"].createElement(label_1.Label, { htmlFor: "description" }, "Descripci\u00F3n"),
+                        react_2["default"].createElement(textarea_1.Textarea, { id: "description", value: newProduct.description, onChange: function (e) { return setNewProduct(__assign(__assign({}, newProduct), { description: e.target.value })); }, rows: 3 })),
+                    react_2["default"].createElement("div", { className: "grid gap-2" },
+                        react_2["default"].createElement(label_1.Label, { htmlFor: "category" }, "Categor\u00EDa"),
+                        react_2["default"].createElement("select", { id: "category", value: selectedCategory, onChange: function (e) { return setSelectedCategory(e.target.value); }, className: "border rounded p-2" },
+                            react_2["default"].createElement("option", { value: "" }, "Selecciona una categor\u00EDa"),
+                            categories.map(function (category) { return (react_2["default"].createElement("option", { key: category.id, value: category.id }, category.name)); }))),
+                    react_2["default"].createElement("div", { className: "grid gap-2" },
+                        react_2["default"].createElement(label_1.Label, { htmlFor: "price" }, "Precio"),
+                        react_2["default"].createElement(input_1.Input, { id: "price", type: "number", value: newProduct.price, onChange: function (e) { return setNewProduct(__assign(__assign({}, newProduct), { price: e.target.value })); }, required: true })),
+                    react_2["default"].createElement("div", { className: "grid gap-2" },
+                        react_2["default"].createElement(label_1.Label, null, "Imagen del producto"),
+                        react_2["default"].createElement(ImageUploader_1["default"], { onImageUploaded: handleImageUploaded }))),
+                react_2["default"].createElement(dialog_1.DialogFooter, null,
+                    react_2["default"].createElement(button_1.Button, { type: "button", variant: "outline", onClick: function () { return setIsOpen(false); }, disabled: isSubmitting }, "Cancelar"),
+                    react_2["default"].createElement(button_1.Button, { type: "submit", disabled: isSubmitting }, isSubmitting ? (react_2["default"].createElement(react_2["default"].Fragment, null,
+                        react_2["default"].createElement("div", { className: "mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" }),
                         "Guardando...")) : ("Guardar producto")))))));
 }
 exports["default"] = AddProductDialog;

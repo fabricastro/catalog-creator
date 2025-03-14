@@ -53,7 +53,7 @@ export default function Register() {
                 <div className="container px-4 md:px-6">
                     <Link href="/" className="flex items-center gap-2 font-bold">
                         <BookOpen className="h-6 w-6" />
-                        <span>CatálogoFácil</span>
+                        <span>PediloApp</span>
                     </Link>
                 </div>
             </header>

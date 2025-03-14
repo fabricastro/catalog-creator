@@ -40,7 +40,7 @@ exports.__esModule = true;
 var react_1 = require("react");
 var lucide_react_1 = require("lucide-react");
 var button_1 = require("@/components/ui/button");
-var image_1 = require("next/image");
+var CloudinaryImage_1 = require("@/components/ui/CloudinaryImage");
 function ImageUploader(_a) {
     var _this = this;
     var productId = _a.productId, currentImageUrl = _a.currentImageUrl, onImageUploaded = _a.onImageUploaded;
@@ -49,7 +49,7 @@ function ImageUploader(_a) {
     var _d = react_1.useState(null), error = _d[0], setError = _d[1];
     var fileInputRef = react_1.useRef(null);
     var handleFileChange = function (e) { return __awaiter(_this, void 0, void 0, function () {
-        var file, validTypes, maxSize, objectUrl;
+        var file, validTypes, objectUrl;
         var _a;
         return __generator(this, function (_b) {
             switch (_b.label) {
@@ -59,32 +59,26 @@ function ImageUploader(_a) {
                         return [2 /*return*/];
                     validTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
                     if (!validTypes.includes(file.type)) {
-                        setError("Por favor selecciona una imagen (JPEG, PNG, WEBP o GIF).");
+                        setError("Formato no válido (JPEG, PNG, WEBP o GIF).");
                         return [2 /*return*/];
                     }
-                    maxSize = 5 * 1024 * 1024;
-                    if (file.size > maxSize) {
+                    if (file.size > 5 * 1024 * 1024) {
                         setError("La imagen no debe superar los 5MB.");
                         return [2 /*return*/];
                     }
                     objectUrl = URL.createObjectURL(file);
                     setPreviewUrl(objectUrl);
                     setError(null);
-                    // Si no hay ID de producto, solo mostramos la vista previa
-                    if (!productId) {
-                        onImageUploaded(objectUrl);
-                        return [2 /*return*/];
-                    }
-                    // Subir la imagen al servidor
-                    return [4 /*yield*/, uploadImage(file, productId)];
+                    // Subir imagen
+                    return [4 /*yield*/, uploadImage(file)];
                 case 1:
-                    // Subir la imagen al servidor
+                    // Subir imagen
                     _b.sent();
                     return [2 /*return*/];
             }
         });
     }); };
-    var uploadImage = function (file, productId) { return __awaiter(_this, void 0, void 0, function () {
+    var uploadImage = function (file) { return __awaiter(_this, void 0, void 0, function () {
         var formData, response, data, error_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
@@ -96,27 +90,23 @@ function ImageUploader(_a) {
                     _a.trys.push([1, 4, 5, 6]);
                     formData = new FormData();
                     formData.append("file", file);
-                    formData.append("productId", productId);
-                    return [4 /*yield*/, fetch("/api/upload", {
-                            method: "POST",
-                            body: formData
-                        })];
+                    formData.append("id", productId);
+                    formData.append("type", "product"); // ✅ Especificar que es un producto
+                    return [4 /*yield*/, fetch("/api/upload", { method: "POST", body: formData })];
                 case 2:
                     response = _a.sent();
                     return [4 /*yield*/, response.json()];
                 case 3:
                     data = _a.sent();
-                    if (!response.ok) {
+                    if (!response.ok)
                         throw new Error(data.error || "Error al subir la imagen");
-                    }
-                    // Llamar al callback con la URL de la imagen
                     onImageUploaded(data.imageUrl);
+                    setPreviewUrl(data.imageUrl); // ✅ Guardamos la URL de Cloudinary
                     return [3 /*break*/, 6];
                 case 4:
                     error_1 = _a.sent();
                     console.error("Error al subir imagen:", error_1);
-                    setError(error_1 instanceof Error ? error_1.message : "Error al subir la imagen");
-                    // Si hay error, mantenemos la imagen anterior si existe
+                    setError("Error al subir la imagen");
                     setPreviewUrl(currentImageUrl || null);
                     return [3 /*break*/, 6];
                 case 5:
@@ -128,29 +118,15 @@ function ImageUploader(_a) {
     }); };
     var handleRemoveImage = function () {
         setPreviewUrl(null);
-        if (fileInputRef.current) {
-            fileInputRef.current.value = "";
-        }
+        fileInputRef.current && (fileInputRef.current.value = "");
         onImageUploaded("");
     };
-    var triggerFileInput = function () {
-        var _a;
-        (_a = fileInputRef.current) === null || _a === void 0 ? void 0 : _a.click();
-    };
-    return (React.createElement("div", { className: "space-y-2" },
-        React.createElement("input", { type: "file", ref: fileInputRef, onChange: handleFileChange, accept: "image/jpeg,image/png,image/webp,image/gif", className: "hidden" }),
-        previewUrl ? (React.createElement("div", { className: "relative aspect-video w-full overflow-hidden rounded-md border border-border" },
-            React.createElement(image_1["default"], { src: previewUrl || "/placeholder.svg", alt: "Vista previa", fill: true, className: "object-cover", unoptimized: true }),
-            React.createElement(button_1.Button, { variant: "destructive", size: "icon", className: "absolute top-2 right-2 h-8 w-8 rounded-full opacity-90", onClick: handleRemoveImage },
-                React.createElement(lucide_react_1.X, { className: "h-4 w-4" })))) : (React.createElement("div", { onClick: triggerFileInput, className: "flex aspect-video w-full cursor-pointer flex-col items-center justify-center rounded-md border border-dashed border-border bg-muted/50 hover:bg-muted" },
-            React.createElement(lucide_react_1.ImageIcon, { className: "mb-2 h-10 w-10 text-muted-foreground" }),
-            React.createElement("p", { className: "text-sm text-muted-foreground" }, "Haz clic para subir una imagen"),
-            React.createElement("p", { className: "text-xs text-muted-foreground mt-1" }, "JPEG, PNG, WEBP o GIF (m\u00E1x. 5MB)"))),
-        error && React.createElement("p", { className: "text-sm text-destructive" }, error),
-        React.createElement(button_1.Button, { type: "button", variant: "outline", size: "sm", className: "mt-2 w-full", onClick: triggerFileInput, disabled: isUploading }, isUploading ? (React.createElement(React.Fragment, null,
-            React.createElement("div", { className: "mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" }),
-            "Subiendo...")) : (React.createElement(React.Fragment, null,
-            React.createElement(lucide_react_1.Upload, { className: "mr-2 h-4 w-4" }),
-            previewUrl ? "Cambiar imagen" : "Subir imagen")))));
+    return (React.createElement("div", { className: "w-full space-y-2" },
+        React.createElement("input", { type: "file", ref: fileInputRef, onChange: handleFileChange, accept: "image/*", className: "hidden" }),
+        React.createElement("div", { className: "relative w-full h-48 border rounded-md overflow-hidden flex items-center justify-center" }, isUploading ? (React.createElement("div", { className: "absolute inset-0 flex items-center justify-center bg-gray-200" },
+            React.createElement("div", { className: "h-10 w-10 border-4 border-gray-400 border-t-transparent rounded-full animate-spin" }))) : previewUrl ? (React.createElement(CloudinaryImage_1["default"], { src: previewUrl, alt: "Vista previa", width: 800, height: 600, className: "h-full w-full object-cover" })) : (React.createElement("div", { className: "flex h-full w-full items-center justify-center bg-gray-100" },
+            React.createElement(lucide_react_1.ImageIcon, { className: "h-10 w-10 text-gray-400" })))),
+        React.createElement(button_1.Button, { type: "button", variant: "outline", size: "sm", className: "w-full", onClick: function () { var _a; return (_a = fileInputRef.current) === null || _a === void 0 ? void 0 : _a.click(); }, disabled: isUploading }, isUploading ? "Subiendo..." : "Subir imagen"),
+        error && React.createElement("p", { className: "text-sm text-destructive" }, error)));
 }
 exports["default"] = ImageUploader;

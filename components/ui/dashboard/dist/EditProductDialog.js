@@ -55,15 +55,18 @@ var input_1 = require("@/components/ui/input");
 var textarea_1 = require("@/components/ui/textarea");
 var label_1 = require("@/components/ui/label");
 var lucide_react_1 = require("lucide-react");
+var navigation_1 = require("next/navigation");
 var ImageUploader_1 = require("./ImageUploader");
+var sonner_1 = require("sonner");
 function EditProductDialog(_a) {
     var _this = this;
     var product = _a.product, businessName = _a.businessName, setBusiness = _a.setBusiness;
-    var _b = react_1.useState(__assign(__assign({}, product), { categoryId: product.categoryId || "" })), editingProduct = _b[0], setEditingProduct = _b[1];
+    var _b = react_1.useState(__assign({}, product)), editedProduct = _b[0], setEditedProduct = _b[1];
     var _c = react_1.useState([]), categories = _c[0], setCategories = _c[1];
     var _d = react_1.useState(false), isOpen = _d[0], setIsOpen = _d[1];
     var _e = react_1.useState(false), isSubmitting = _e[0], setIsSubmitting = _e[1];
-    // Cargar categorías cuando se abre el modal
+    var params = navigation_1.useParams();
+    var businessSlug = params.businessSlug;
     react_1.useEffect(function () {
         var fetchCategories = function () { return __awaiter(_this, void 0, void 0, function () {
             var res, data, error_1;
@@ -71,7 +74,7 @@ function EditProductDialog(_a) {
                 switch (_a.label) {
                     case 0:
                         _a.trys.push([0, 3, , 4]);
-                        return [4 /*yield*/, fetch("/api/business/" + businessName + "/categories")];
+                        return [4 /*yield*/, fetch("/api/business/" + encodeURIComponent(businessSlug) + "/categories")];
                     case 1:
                         res = _a.sent();
                         if (!res.ok)
@@ -83,7 +86,12 @@ function EditProductDialog(_a) {
                         return [3 /*break*/, 4];
                     case 3:
                         error_1 = _a.sent();
-                        console.error("❌ Error al obtener categorías:", error_1);
+                        console.error("Error al obtener categorías:", error_1);
+                        sonner_1.toast.error("Error al cargar categorías", {
+                            description: "No se pudieron cargar las categorías. Intenta nuevamente.",
+                            position: "top-center",
+                            duration: 3000
+                        });
                         return [3 /*break*/, 4];
                     case 4: return [2 /*return*/];
                 }
@@ -91,13 +99,15 @@ function EditProductDialog(_a) {
         }); };
         if (isOpen) {
             fetchCategories();
+            // Asegurarse de que el producto tenga los datos actualizados
+            setEditedProduct(__assign({}, product));
         }
-    }, [isOpen, businessName]);
+    }, [businessSlug, isOpen, product]);
     var handleImageUploaded = function (imageUrl) {
-        setEditingProduct(function (prev) { return (__assign(__assign({}, prev), { imageUrl: imageUrl })); });
+        setEditedProduct(function (prev) { return (__assign(__assign({}, prev), { imageUrl: imageUrl })); });
     };
-    var handleEditProduct = function (e) { return __awaiter(_this, void 0, void 0, function () {
-        var updatedProduct, res, data_1, error_2;
+    var handleUpdateProduct = function (e) { return __awaiter(_this, void 0, void 0, function () {
+        var res, data_1, error_2;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -106,11 +116,10 @@ function EditProductDialog(_a) {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 4, 5, 6]);
-                    updatedProduct = __assign(__assign({}, editingProduct), { price: Number.parseFloat(editingProduct.price.toString()), categoryId: editingProduct.categoryId || null });
-                    return [4 /*yield*/, fetch("/api/business/" + businessName + "/update-product/" + editingProduct.id, {
+                    return [4 /*yield*/, fetch("/api/business/" + businessSlug + "/update-product/" + product.id, {
                             method: "PUT",
                             headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify(updatedProduct)
+                            body: JSON.stringify(editedProduct)
                         })];
                 case 2:
                     res = _a.sent();
@@ -118,19 +127,36 @@ function EditProductDialog(_a) {
                 case 3:
                     data_1 = _a.sent();
                     if (res.ok) {
+                        // Actualizar el estado del negocio con el producto actualizado
                         setBusiness(function (prev) {
-                            return prev ? __assign(__assign({}, prev), { products: prev.products.map(function (prod) { return (prod.id === data_1.id ? data_1 : prod); }) }) : prev;
+                            if (!prev)
+                                return prev;
+                            return __assign(__assign({}, prev), { products: prev.products.map(function (p) { return (p.id === product.id ? data_1 : p); }) });
                         });
                         setIsOpen(false);
+                        // Mostrar toast de éxito
+                        sonner_1.toast.success("Producto actualizado", {
+                            description: editedProduct.name + " ha sido actualizado correctamente.",
+                            position: "top-center",
+                            duration: 3000
+                        });
                     }
                     else {
-                        alert("Error al actualizar el producto: " + data_1.error);
+                        sonner_1.toast.error("Error al actualizar producto", {
+                            description: data_1.error || "Ocurrió un error al actualizar el producto.",
+                            position: "top-center",
+                            duration: 4000
+                        });
                     }
                     return [3 /*break*/, 6];
                 case 4:
                     error_2 = _a.sent();
                     console.error("Error al actualizar producto:", error_2);
-                    alert("Error al actualizar el producto. Por favor intenta de nuevo.");
+                    sonner_1.toast.error("Error al actualizar producto", {
+                        description: "Ocurrió un error inesperado. Por favor intenta de nuevo.",
+                        position: "top-center",
+                        duration: 4000
+                    });
                     return [3 /*break*/, 6];
                 case 5:
                     setIsSubmitting(false);
@@ -141,32 +167,35 @@ function EditProductDialog(_a) {
     }); };
     return (React.createElement(dialog_1.Dialog, { open: isOpen, onOpenChange: setIsOpen },
         React.createElement(dialog_1.DialogTrigger, { asChild: true },
-            React.createElement(button_1.Button, { variant: "outline", size: "sm", onClick: function () { return setIsOpen(true); } },
+            React.createElement(button_1.Button, { variant: "outline", size: "sm" },
                 React.createElement(lucide_react_1.Edit, { className: "h-4 w-4 mr-1" }),
                 " Editar")),
         React.createElement(dialog_1.DialogContent, { className: "sm:max-w-[500px]" },
             React.createElement(dialog_1.DialogHeader, null,
                 React.createElement(dialog_1.DialogTitle, null, "Editar producto"),
-                React.createElement(dialog_1.DialogDescription, null, "Actualiza los detalles del producto.")),
-            React.createElement("form", { onSubmit: handleEditProduct },
+                React.createElement(dialog_1.DialogDescription, null, "Modifica los detalles del producto.")),
+            React.createElement("form", { onSubmit: handleUpdateProduct },
                 React.createElement("div", { className: "grid gap-4 py-4" },
                     React.createElement("div", { className: "grid gap-2" },
-                        React.createElement(label_1.Label, { htmlFor: "edit-name" }, "Nombre"),
-                        React.createElement(input_1.Input, { id: "edit-name", value: editingProduct.name, onChange: function (e) { return setEditingProduct(__assign(__assign({}, editingProduct), { name: e.target.value })); }, required: true })),
+                        React.createElement(label_1.Label, { htmlFor: "name" }, "Nombre"),
+                        React.createElement(input_1.Input, { id: "name", value: editedProduct.name, onChange: function (e) { return setEditedProduct(__assign(__assign({}, editedProduct), { name: e.target.value })); }, required: true })),
                     React.createElement("div", { className: "grid gap-2" },
-                        React.createElement(label_1.Label, { htmlFor: "edit-description" }, "Descripci\u00F3n"),
-                        React.createElement(textarea_1.Textarea, { id: "edit-description", value: editingProduct.description, onChange: function (e) { return setEditingProduct(__assign(__assign({}, editingProduct), { description: e.target.value })); }, rows: 3 })),
+                        React.createElement(label_1.Label, { htmlFor: "description" }, "Descripci\u00F3n"),
+                        React.createElement(textarea_1.Textarea, { id: "description", value: editedProduct.description, onChange: function (e) { return setEditedProduct(__assign(__assign({}, editedProduct), { description: e.target.value })); }, rows: 3 })),
                     React.createElement("div", { className: "grid gap-2" },
-                        React.createElement(label_1.Label, { htmlFor: "edit-category" }, "Categor\u00EDa"),
-                        React.createElement("select", { id: "edit-category", value: editingProduct.categoryId, onChange: function (e) { return setEditingProduct(__assign(__assign({}, editingProduct), { categoryId: e.target.value })); }, className: "border rounded p-2" },
+                        React.createElement(label_1.Label, { htmlFor: "category" }, "Categor\u00EDa"),
+                        React.createElement("select", { id: "category", value: editedProduct.categoryId || "", onChange: function (e) { return setEditedProduct(__assign(__assign({}, editedProduct), { categoryId: e.target.value || undefined })); }, className: "border rounded p-2" },
                             React.createElement("option", { value: "" }, "Selecciona una categor\u00EDa"),
                             categories.map(function (category) { return (React.createElement("option", { key: category.id, value: category.id }, category.name)); }))),
                     React.createElement("div", { className: "grid gap-2" },
-                        React.createElement(label_1.Label, { htmlFor: "edit-price" }, "Precio"),
-                        React.createElement(input_1.Input, { id: "edit-price", type: "number", value: editingProduct.price, onChange: function (e) { return setEditingProduct(__assign(__assign({}, editingProduct), { price: e.target.value })); }, required: true })),
+                        React.createElement(label_1.Label, { htmlFor: "price" }, "Precio"),
+                        React.createElement(input_1.Input, { id: "price", type: "number", value: editedProduct.price, onChange: function (e) { return setEditedProduct(__assign(__assign({}, editedProduct), { price: e.target.value })); }, required: true })),
                     React.createElement("div", { className: "grid gap-2" },
                         React.createElement(label_1.Label, null, "Imagen del producto"),
-                        React.createElement(ImageUploader_1["default"], { productId: editingProduct.id, currentImageUrl: editingProduct.imageUrl, onImageUploaded: handleImageUploaded }))),
+                        React.createElement("div", { className: "flex items-center gap-4" },
+                            editedProduct.imageUrl && (React.createElement("div", { className: "w-16 h-16 relative rounded-md overflow-hidden bg-muted flex-shrink-0" },
+                                React.createElement("img", { src: editedProduct.imageUrl || "/placeholder.svg", alt: editedProduct.name, className: "h-full w-full object-cover" }))),
+                            React.createElement(ImageUploader_1["default"], { onImageUploaded: handleImageUploaded })))),
                 React.createElement(dialog_1.DialogFooter, null,
                     React.createElement(button_1.Button, { type: "button", variant: "outline", onClick: function () { return setIsOpen(false); }, disabled: isSubmitting }, "Cancelar"),
                     React.createElement(button_1.Button, { type: "submit", disabled: isSubmitting }, isSubmitting ? (React.createElement(React.Fragment, null,

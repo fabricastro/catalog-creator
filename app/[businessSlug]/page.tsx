@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
-import Image from "next/image"
 import Link from "next/link"
 import { ShoppingCart, Clock, Phone, MapPin, Plus, Minus, X, Send, Search, MenuIcon, Home } from "lucide-react"
 
@@ -13,7 +12,8 @@ import { Badge } from "@/components/ui/badge"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import CloudinaryImage from "@/components/ui/CloudinaryImage"
 
 interface Product {
     id: string
@@ -22,6 +22,7 @@ interface Product {
     price: number
     imageUrl?: string
     categoryId?: string
+    categoryName?: string
 }
 
 interface Business {
@@ -38,7 +39,6 @@ interface CartItem extends Product {
     quantity: number
 }
 
-const CATEGORIES = ["Todos", "Entradas", "Platos principales", "Postres", "Bebidas"]
 
 export default function BusinessPage() {
     const params = useParams()
@@ -51,50 +51,52 @@ export default function BusinessPage() {
     const [isCartOpen, setIsCartOpen] = useState(false)
     const [isMenuOpen, setIsMenuOpen] = useState(false)
 
-    const [categories, setCategories] = useState<string[]>(["Todos"]);
-    const [categoryMap, setCategoryMap] = useState<{ [key: string]: string }>({});
+    const [categories, setCategories] = useState<string[]>(["Todos"])
+    const [categoryMap, setCategoryMap] = useState<{ [key: string]: string }>({})
 
     useEffect(() => {
         const fetchBusinessAndCategories = async () => {
             try {
                 // Obtener datos del negocio
-                const businessRes = await fetch(`/api/business/${businessSlug}`);
-                if (!businessRes.ok) throw new Error("Error al obtener el negocio");
-                const businessData = await businessRes.json();
+                const businessRes = await fetch(`/api/business/${businessSlug}`)
+                if (!businessRes.ok) throw new Error("Error al obtener el negocio")
+                const businessData = await businessRes.json()
 
                 // Obtener categorías
-                const categoriesRes = await fetch(`/api/business/${businessSlug}/categories`);
-                if (!categoriesRes.ok) throw new Error("Error al obtener las categorías");
-                const categoriesData = await categoriesRes.json();
+                const categoriesRes = await fetch(`/api/business/${businessSlug}/categories`)
+                if (!categoriesRes.ok) throw new Error("Error al obtener las categorías")
+                const categoriesData = await categoriesRes.json()
 
                 // Crear un mapa de categorías (id -> nombre)
-                const categoryMapping: { [key: string]: string } = {};
+                const categoryMapping: { [key: string]: string } = {}
                 categoriesData.forEach((cat: { id: string; name: string }) => {
-                    categoryMapping[cat.id] = cat.name;
-                });
+                    categoryMapping[cat.id] = cat.name
+                })
 
-                setCategories(["Todos", ...categoriesData.map((cat) => cat.name)]);
-                setCategoryMap(categoryMapping);
+                // Asegurarse de que todas las categorías sean únicas
+                const uniqueCategories = ["Todos", ...new Set(categoriesData.map((cat) => cat.name))]
+                setCategories(uniqueCategories)
+                setCategoryMap(categoryMapping)
 
                 // Asignar el nombre de la categoría a cada producto
                 const productsWithCategories = businessData.products.map((product: Product) => ({
                     ...product,
-                    categoryName: categoryMapping[product.categoryId] || "Sin categoría",
-                }));
+                    categoryName: product.categoryId ? categoryMapping[product.categoryId] : "Sin categoría",
+                }))
 
                 setBusiness({
                     ...businessData,
                     products: productsWithCategories,
-                });
+                })
             } catch (error) {
-                console.error("Error fetching business and categories:", error);
+                console.error("Error fetching business and categories:", error)
             } finally {
-                setLoading(false);
+                setLoading(false)
             }
-        };
+        }
 
-        fetchBusinessAndCategories();
-    }, [businessSlug]);
+        fetchBusinessAndCategories()
+    }, [businessSlug])
 
     const addToCart = (product: Product) => {
         setCart((prevCart) => {
@@ -143,19 +145,27 @@ export default function BusinessPage() {
 
 ` +
             cart.map((item) => `- ${item.name} x${item.quantity}: $${item.price * item.quantity}`).join("\n") +
-            `\n\nTotal: $${getCartTotal()}`
+            `
+
+Total: $${getCartTotal()}`
 
         const whatsappUrl = `https://wa.me/${business.contact}?text=${encodeURIComponent(message)}`
         window.open(whatsappUrl, "_blank")
     }
 
-    const filteredProducts =
-        business?.products.filter((product) =>
-            (activeCategory === "Todos" || categories.find((cat) => cat === activeCategory && cat === product.categoryId)) &&
-            (product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                (product.description && product.description.toLowerCase().includes(searchQuery.toLowerCase())))
-        ) || [];
+    const handleSearch = (e) => {
+        const query = e.target.value.trim().toLowerCase()
+        setSearchQuery(query)
+    }
 
+    const filteredProducts =
+        business?.products.filter(
+            (product) =>
+                (activeCategory === "Todos" || (product.categoryName && product.categoryName === activeCategory)) &&
+                (searchQuery === "" ||
+                    product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    (product.description && product.description.toLowerCase().includes(searchQuery.toLowerCase()))),
+        ) || []
 
     if (loading) {
         return (
@@ -203,9 +213,21 @@ export default function BusinessPage() {
 
                 <div className="container relative z-10 px-4 py-8 mx-auto flex flex-col md:flex-row items-center gap-6">
                     <div className="flex-shrink-0">
-                        <Avatar className="h-24 w-24 border-4 border-primary-foreground/20">
-                            <AvatarImage src={business.logoUrl || ""} alt={business.name} />
-                            <AvatarFallback className="text-3xl">{business.name.charAt(0)}</AvatarFallback>
+                        <Avatar className="h-24 w-24 border-4 border-primary-foreground/20 overflow-hidden">
+                            {business.logoUrl ? (
+                                <div className="h-full w-full flex items-center justify-center">
+                                    <CloudinaryImage
+                                        src={business.logoUrl}
+                                        alt={business.name}
+                                        width={96}
+                                        height={96}
+                                        crop="fit"
+                                        className="h-full w-full object-contain p-3"
+                                    />
+                                </div>
+                            ) : (
+                                <AvatarFallback className="text-3xl">{business.name.charAt(0)}</AvatarFallback>
+                            )}
                         </Avatar>
                     </div>
 
@@ -262,12 +284,13 @@ export default function BusinessPage() {
                                                 <div key={item.id} className="flex items-center gap-4 px-4">
                                                     <div className="w-16 h-16 relative rounded-md overflow-hidden bg-muted flex-shrink-0">
                                                         {item.imageUrl ? (
-                                                            <Image
-                                                                src={item.imageUrl || "/placeholder.svg"}
+                                                            <CloudinaryImage
+                                                                src={item.imageUrl}
                                                                 alt={item.name}
-                                                                fill
-                                                                className="object-cover"
-                                                                unoptimized
+                                                                width={64}
+                                                                height={64}
+                                                                crop="fit"
+                                                                className="h-full w-full object-cover"
                                                             />
                                                         ) : (
                                                             <div className="flex items-center justify-center h-full text-muted-foreground">
@@ -345,12 +368,7 @@ export default function BusinessPage() {
                 <div className="mb-6">
                     <div className="relative">
                         <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            placeholder="Buscar productos..."
-                            className="pl-10"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
+                        <Input placeholder="Buscar productos..." className="pl-10" value={searchQuery} onChange={handleSearch} />
                     </div>
                 </div>
 
@@ -383,7 +401,7 @@ export default function BusinessPage() {
                                 <SheetTitle>Categorías</SheetTitle>
                             </SheetHeader>
                             <div className="mt-6 space-y-2">
-                                {CATEGORIES.map((category) => (
+                                {categories.map((category) => (
                                     <Button
                                         key={category}
                                         variant={activeCategory === category ? "default" : "ghost"}
@@ -394,6 +412,9 @@ export default function BusinessPage() {
                                         }}
                                     >
                                         {category}
+                                        {activeCategory === category && (
+                                            <span className="ml-2 h-2 w-2 rounded-full bg-primary-foreground"></span>
+                                        )}
                                     </Button>
                                 ))}
                             </div>
@@ -405,18 +426,23 @@ export default function BusinessPage() {
                     <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
                         {filteredProducts.map((product) => (
                             <Card key={product.id} className="overflow-hidden">
-                                <div className="aspect-video relative bg-muted">
+                                <div className="aspect-video relative bg-muted mx-4 rounded-lg">
                                     {product.imageUrl ? (
-                                        <Image src={product.imageUrl} alt={product.name} fill className="object-cover" unoptimized />
+                                        <CloudinaryImage
+                                            src={product.imageUrl}
+                                            alt={product.name}
+                                            width={400}
+                                            height={300}
+                                            crop="fit"
+                                            className="h-full w-full object-cover"
+                                        />
                                     ) : (
                                         <div className="flex items-center justify-center h-full text-muted-foreground">
                                             <MenuIcon className="h-10 w-10" />
                                         </div>
                                     )}
                                     {product.categoryName && (
-                                        <Badge className="absolute top-2 right-2 bg-primary text-white">
-                                            {product.categoryName}
-                                        </Badge>
+                                        <Badge className="absolute top-2 right-2 bg-primary text-white">{product.categoryName}</Badge>
                                     )}
                                 </div>
                                 <CardHeader className="p-4">
@@ -435,7 +461,6 @@ export default function BusinessPage() {
                                     </Button>
                                 </CardFooter>
                             </Card>
-
                         ))}
                     </div>
                 ) : (

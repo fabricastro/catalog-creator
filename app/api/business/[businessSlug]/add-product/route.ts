@@ -3,7 +3,7 @@ import prisma from "@/app/lib/prisma"
 
 export async function POST(request: NextRequest, { params }: { params: { businessSlug: string } }) {
     try {
-        const { businessSlug } = params
+        const { businessSlug } = await params
         const { name, description, price, imageUrl, categoryId } = await request.json()
 
         // ✅ Convertir `price` a número si llega como string
