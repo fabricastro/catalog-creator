@@ -93,7 +93,7 @@ export default function Home() {
               <div className="flex justify-center lg:justify-end">
                 <div className="relative w-full max-w-[500px] aspect-[4/3] rounded-lg overflow-hidden border shadow-lg">
                   <Image
-                    src="/placeholder.svg?height=600&width=800"
+                    src="/electronics.png?height=600&width=800"
                     alt="Ejemplo de catálogo digital"
                     width={800}
                     height={600}
@@ -102,7 +102,7 @@ export default function Home() {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end p-6">
                     <div className="text-white">
                       <p className="text-sm font-medium">Ejemplo de catálogo</p>
-                      <h3 className="text-xl font-bold">Restaurante Modelo</h3>
+                      <h3 className="text-xl font-bold">Tienda de Electrónica</h3>
                     </div>
                   </div>
                 </div>
@@ -182,11 +182,11 @@ export default function Home() {
                   <ul className="space-y-2 text-sm">
                     <li className="flex items-start">
                       <CheckCircle2 className="h-4 w-4 text-primary mr-2 mt-0.5" />
-                      <span>Interfaz de arrastrar y soltar</span>
+                      <span>Interfaz fácil de usar</span>
                     </li>
                     <li className="flex items-start">
                       <CheckCircle2 className="h-4 w-4 text-primary mr-2 mt-0.5" />
-                      <span>Carga masiva de productos</span>
+                      <span>Carga de productos</span>
                     </li>
                     <li className="flex items-start">
                       <CheckCircle2 className="h-4 w-4 text-primary mr-2 mt-0.5" />
@@ -413,11 +413,11 @@ export default function Home() {
                 <div className="flex justify-center">
                   <div className="relative w-full max-w-[400px] aspect-square">
                     <Image
-                      src="/placeholder.svg?height=400&width=400"
+                      src="/mobile.png?height=400&width=400"
                       alt="Catálogo digital en dispositivos"
                       width={400}
                       height={400}
-                      className="object-contain"
+                      className="object-contain rounded-lg"
                     />
                   </div>
                 </div>
@@ -427,7 +427,7 @@ export default function Home() {
         </section>
       </main>
 
-      <Footer variant="simple" businessName="PediloApp" showSocial={true} showLinks={true} />
+      <Footer businessName="PediloApp" showSocial={true} showLinks={true} />
     </div>
   )
 }

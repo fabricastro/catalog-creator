@@ -32,16 +32,16 @@ export function Footer({
 
     // Información de contacto
     const contactInfo = [
-        { icon: Mail, text: "contacto@pediloapp.com", href: "mailto:contacto@pediloapp.com" },
-        { icon: Phone, text: "+54 11 1234-5678", href: "tel:+5411123456789" },
-        { icon: MapPin, text: "Buenos Aires, Argentina", href: "#" },
+        { icon: Mail, text: "fabricio.castro@technodevs.com.ar", href: "mailto:fabricio.castro@technodevs.com.ar" },
+        { icon: Phone, text: "+54 9 264-4412511", href: "tel:+5492644412511" },
+        { icon: MapPin, text: "San Juan, Argentina", href: "#" },
     ]
 
     // Redes sociales
     const socialLinks = [
-        { icon: Facebook, href: "https://facebook.com", label: "Facebook" },
-        { icon: Instagram, href: "https://instagram.com", label: "Instagram" },
-        { icon: Twitter, href: "https://twitter.com", label: "Twitter" },
+        // { icon: Facebook, href: "https://facebook.com", label: "Facebook" },
+        { icon: Instagram, href: "https://www.instagram.com/fabri.code/", label: "Instagram" },
+        // { icon: Twitter, href: "https://twitter.com", label: "Twitter" },
     ]
 
     // Renderizar el footer según la variante
@@ -120,7 +120,7 @@ export function Footer({
     return (
         <footer className={`w-full py-8 px-4 border-t ${className}`}>
             <div className="container mx-auto">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
                     {/* Columna 1: Información de la empresa */}
                     <div className="flex flex-col">
                         <h3 className="font-bold text-lg mb-4">{businessName}</h3>
@@ -183,7 +183,7 @@ export function Footer({
                         </div>
                     )}
 
-                    {/* Columna 4: Newsletter */}
+                    {/* Columna 4: Newsletter
                     <div className="flex flex-col">
                         <h3 className="font-bold text-lg mb-4">Mantente informado</h3>
                         <p className="text-sm text-muted-foreground mb-4">
@@ -197,7 +197,7 @@ export function Footer({
                             />
                             <Button>Suscribirse</Button>
                         </div>
-                    </div>
+                    </div> */}
                 </div>
 
                 <Separator className="my-6" />
@@ -206,7 +206,7 @@ export function Footer({
                     <p className="text-sm text-muted-foreground">
                         © {year} {businessName}. Todos los derechos reservados.
                     </p>
-                    <p className="text-sm text-muted-foreground mt-2 sm:mt-0">Desarrollado con ❤️ en Argentina</p>
+                    <p className="text-sm text-muted-foreground mt-2 sm:mt-0">Desarrollado con ❤️ por fabricastro</p>
                 </div>
             </div>
         </footer>
